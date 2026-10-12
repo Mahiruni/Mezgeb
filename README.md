@@ -16,7 +16,7 @@ Mezgeb is an Ethiopian small-business ledger: sales, expenses, estimated VAT, dr
 - Monthly charts, CSV reports, IndexedDB storage, JSON backup/restore and explicit old HTML import.
 - English/Amharic core UI. Five additional original language choices with English fallback pending full dictionary migration.
 - HTTPS PWA service worker that caches the app shell, not financial database contents.
-- Reviewable Supabase PostgreSQL schema and owner-based RLS migration, NOT applied.
+- Supabase PostgreSQL schema and ownership-based RLS migrations applied to the dedicated Mezgeb project. Manual cloud backups are available through authenticated endpoints on the development branch; not live sync.
 
 ## Running locally
 
@@ -48,16 +48,16 @@ The supplied HTML contains an embedded Benaiah font. The font is not redistribut
 
 Recording a payment method such as M-Pesa, Telebirr, CBE Birr or Chapa does not move money. No real payment providers are connected.
 
-Receipt numbering is DRAFT-only. Financial calculations and exports are internal tools, not an official tax filing. The proposed Supabase SQL migration does not by itself make a compliant fiscal system.
+Receipt numbering is DRAFT-only. Financial calculations and exports are internal tools, not an official tax filing. The applied Supabase SQL migrations do not by themselves make a compliant fiscal system.
 
-No online sign-in, Supabase sync, verified Chapa payment, paid entitlement activation, server-issued final receipts, multi-user access, admin dashboard, audit-log enforcement, or offline conflict reconciliation is active yet.
+Secure Supabase sign-in and an opt-in manual cloud snapshot backup were added on the feature branch. Automatic Supabase sync, verified Chapa payments, paid entitlement activation, server-issued final receipts, staff roles, admin dashboard, enforceable audit logs, and offline conflict reconciliation are NOT active yet.
 
 ## Connect Supabase & Vercel later
 
 1. Link https://github.com/Mahiruni/Mezgeb to a Vercel project and verify preview builds.
-2. Create a Supabase project, review the SQL migration, and apply it after authorization and test validation.
-3. Populate NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel; keep service-role and payment secrets server-side, never public.
-4. Implement secure Auth, memberships, server data access, transaction-safe sync and authoritative receipt issuance before hosting real multi-user financial data.
+2. Dedicated Mezgeb Supabase project pqfzkyssvxmboprkmdga has been created. Its two schema migrations were applied and RLS enabled. Verify authentication, cross-tenant behavior, and all financial operations before public use.
+3. NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY are configured for Vercel Preview; Production names exist but encrypted values were not independently verifiable. Keep service-role and payment secrets server-side, never public.
+4. Authentication and explicit cloud snapshot APIs are included in the feature branch. Next implement verified email flows, secure business isolation tests, transactional full sync and authoritative receipt issuance before hosting real multi-user financial data.
 5. Integrate server-side Chapa initialization and authenticated verification; never activate paid plans from a browser-only callback.
 6. Add production monitoring, database backups, rate-limiting, RLS isolation tests, cross-device sync tests, and payment failure/replay tests before public launch.
 
