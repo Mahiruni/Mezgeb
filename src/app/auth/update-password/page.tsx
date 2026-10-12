@@ -22,7 +22,12 @@ export default function UpdatePasswordPage() {
      if(identityError||!user)throw Error("Your recovery session expired. Request a new recovery email.");
      const {error:changeError}=await client.auth.updateUser({password});
      if(changeError)throw changeError;
-     router.replace("/auth");router.refresh();
+     // End the password-recovery session so its purpose is limited to
+     // recovery. The user must explicitly authenticate with the new password.
+     const {error:signOutError}=await client.auth.signOut({scope:"local"});
+     if(signOutError)throw Error("Password changed, but session cleanup failed. Sign out before continuing.");
+     setPassword("");setConfirm("");
+     router.replace("/auth?password=updated");router.refresh();
    }catch(e){setError(e instanceof Error?e.message:"Password update failed.");}
    finally{setBusy(false);}
  };
