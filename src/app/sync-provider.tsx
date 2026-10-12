@@ -106,6 +106,11 @@ export function SyncProvider({children}:{children:React.ReactNode}){
   if(!isVerified){setStatus("unverified");return;}
   if(meta&&meta.accountId!==accountId){setStatus("account-switch");return;}
   if(!meta){setStatus("not-linked");return;}
+  if(meta.holdForReview){
+    setStatus("conflict");
+    setConflictList([{section:"ledger",key:"recovery",reason:"An older financial snapshot was restored. Review before updating cloud records."}]);
+    return;
+  }
   if(!isOnline()){setStatus("offline");return;}
   if(statusRef.current==="conflict")return;
   setStatus("syncing");
@@ -116,6 +121,11 @@ export function SyncProvider({children}:{children:React.ReactNode}){
   const user=accountRef.current;
   const saved=metaRef.current;
   if(!saved||saved.accountId!==user||!isVerified)return;
+  if(saved.holdForReview){
+    setStatus("conflict");
+    setConflictList([{section:"ledger",key:"recovery",reason:"Restored history requires explicit cloud conflict resolution."}]);
+    return;
+  }
   if(!isOnline()){setStatus("offline");return;}
   lock.current=true;
   const currentRun=++generation.current;
@@ -213,7 +223,12 @@ export function SyncProvider({children}:{children:React.ReactNode}){
   if(!accountId||!isVerified){await refreshIdentity();return;}
   try{setStatus("checking");const r=await remoteGET();setCloud(r.snapshot);
    const saved=await readSyncMeta();setMeta(saved);
-   if(saved?.accountId===accountId){setStatus("syncing");setTick(n=>n+1);}
+   if(saved?.accountId===accountId){
+     if(saved.holdForReview){
+       setConflictList([{section:"ledger",key:"recovery",reason:"You restored historical records; choose which version to keep before syncing again."}]);
+       setStatus("conflict");
+     }else{setStatus("syncing");setTick(n=>n+1);}
+   }
    else{setStatus(saved?"account-switch":"not-linked");}
   }catch(e){setMessage(errMessage(e));setStatus(statusOfError(e,isOnline()));}
  };
@@ -315,11 +330,27 @@ export function SyncProvider({children}:{children:React.ReactNode}){
   setStatus("signed-out");setMessage("Signed out. Sync paused; local records remain.");
  };
  const recover=async(copy:RecoveryCopy)=>{
-  const user=accountId;if(!user||user!==copy.accountId)throw Error("Recovery copy is tied to a different account.");
-  await createRecoveryCopy(await flush(),user,"Before restoring saved recovery snapshot");
-  replace(copy.document);
-  setMessage("Recovery copy restored locally. Auto-sync will check for conflicts before uploading.");
-  setTick(n=>n+1);
+  const user=accountId;
+  const checkpoint=metaRef.current;
+  if(!user||user!==copy.accountId||!checkpoint||checkpoint.accountId!==user){
+    setMessage("This recovery copy is not linked to the signed-in account.");return;
+  }
+  if(lock.current){setMessage("A cloud operation is already running. Retry once it finishes.");return;}
+  lock.current=true;
+  try{
+    const local=await flush();
+    await createRecoveryCopy(local,user,"Before restoring saved recovery snapshot");
+    // Hold must reach IndexedDB BEFORE local data is replaced, so crash/reload
+    // cannot interpret a recovery rollback as intentional financial deletions.
+    const paused:SyncMeta={...checkpoint,holdForReview:true};
+    await storeSyncMeta(paused);
+    metaRef.current=paused;setMeta(paused);
+    replace(copy.document);
+    setConflictList([{section:"ledger",key:"recovery",reason:"A historical ledger was restored. Select Keep Device or Keep Cloud after reviewing both versions."}]);
+    setStatus("conflict");
+    setMessage("Recovery restored locally. Automatic uploads are paused for review.");
+  }catch(e){setStatus("error");setMessage(errMessage(e));}
+  finally{lock.current=false;}
  };
 
  return <Context.Provider value={{status,email,accountId,linkedAccountId,lastSyncedAt,
