@@ -67,7 +67,7 @@ function EntryEditor({type,entry,onClose}:{type:EntryType;entry:Entry|null;onClo
    const now=Date.now();
    update(s=>{
     let receiptRecord=entry?.receipt||null;let nextDraft=s.nextDraft;
-    if(kind==="sale"&&receipt&&!receiptRecord){receiptRecord={number:"DRAFT-"+String(nextDraft++).padStart(6,"0"),status:"draft"};}
+    if(kind==="sale"&&receipt&&!receiptRecord){receiptRecord={number:"DRAFT-"+id().slice(0,8).toUpperCase()+"-"+String(nextDraft++).padStart(4,"0"),status:"draft"};}
     if(!receipt)receiptRecord=null;
     const record:Entry={id:entry?.id||id(),type:kind,cents,category:category.trim(),pay,note:note.trim(),date,createdAt:entry?.createdAt||now,receipt:receiptRecord};
     return {...s,nextDraft,entries:entry?s.entries.map(e=>e.id===entry.id?record:e):[record,...s.entries]};
