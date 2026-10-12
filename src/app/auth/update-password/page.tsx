@@ -24,7 +24,7 @@ export default function UpdatePasswordPage() {
      if(changeError)throw changeError;
      // End the password-recovery session so its purpose is limited to
      // recovery. The user must explicitly authenticate with the new password.
-     const {error:signOutError}=await client.auth.signOut({scope:"local"});
+     const {error:signOutError}=await client.auth.signOut();
      if(signOutError)throw Error("Password changed, but session cleanup failed. Sign out before continuing.");
      setPassword("");setConfirm("");
      router.replace("/auth?password=updated");router.refresh();
