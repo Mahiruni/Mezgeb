@@ -1,5 +1,5 @@
-import type { Business, CreditEvent, Customer, Document, Entry } from "@/lib/mezgeb";
-import { creditBalance, documentSchema } from "@/lib/mezgeb";
+import type { Business, CreditEvent, Customer, Document, Entry } from "../mezgeb";
+import { creditBalance, documentSchema } from "../mezgeb";
 
 export type Conflict = { section: "business" | "ledger" | "dube" | "receipt" | "balance"; key: string; reason: string };
 export type MergeResult = { ok: true; document: Document } | { ok: false; conflicts: Conflict[] };
