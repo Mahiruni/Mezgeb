@@ -52,6 +52,7 @@ export async function GET() {
 const uploadSchema = z.object({
   document: documentSchema,
   expectedRevision: z.number().int().positive().nullable(),
+  accountId: z.string().uuid(),
 });
 
 /**
@@ -74,7 +75,8 @@ export async function POST(request: NextRequest) {
     }
     const payload = uploadSchema.safeParse(JSON.parse(raw));
     if (!payload.success) return fail(422, "The backup is invalid. Export a local copy and check your records.");
-    const { document, expectedRevision } = payload.data;
+    const { document, expectedRevision, accountId } = payload.data;
+    if (accountId !== auth.userId) return fail(403, "This sync belongs to a different account. Sign in again.");
     if (!document.business.name.trim()) return fail(422, "Set up your business name before backing up.");
 
     let { data: business, error: businessError } = await ownedBusiness(auth.client, auth.userId);
