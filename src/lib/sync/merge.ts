@@ -23,6 +23,12 @@ function mergeRecordCollection<T extends {id:string}>(
   const ids=new Set([...bases.keys(),...left.keys(),...right.keys()]);
   const merged:T[]=[];
   for(const id of ids){
+    // Credit history is append-only. A deletion must never disappear silently,
+    // even if the remote record has not changed yet.
+    if(section==="dube" && bases.has(id) && (!left.has(id)||!right.has(id))){
+      conflicts.push({section,key:id,reason:"A historical credit transaction was removed. Review financial history before continuing."});
+      continue;
+    }
     const result=mergeValue(bases.get(id),left.get(id),right.get(id));
     if(result.conflict){
       conflicts.push({section,key:id,reason:"This record changed differently on both devices."});
@@ -44,9 +50,13 @@ function mergeCustomer(base: Customer | undefined, local: Customer | undefined, 
    return {...local,events:events.sort((a,b)=>b.createdAt-a.createdAt)};
  }
  if(!local||!remote){
-   const deleted=local===undefined?remote:local;
-   if(deleted&&!equal(deleted,base)){
-     conflicts.push({section:"dube",key:base.id,reason:"A customer was deleted while another device changed it."});
+   if(base.events.length || (local||remote)?.events.length){
+     conflicts.push({section:"dube",key:base.id,reason:"A customer with financial history was removed on one device. Customer credit records cannot be silently deleted."});
+   }else{
+     const deleted=local===undefined?remote:local;
+     if(deleted&&!equal(deleted,base)){
+       conflicts.push({section:"dube",key:base.id,reason:"A customer was deleted while another device changed it."});
+     }
    }
    return undefined;
  }
