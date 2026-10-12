@@ -30,9 +30,9 @@ async function remoteGET():Promise<CloudReply>{
  if(!response.ok){const error=new Error(payload.error||"Could not contact cloud.");(error as Error & {status:number}).status=response.status;throw error;}
  return payload;
 }
-async function remotePOST(document:Document, expectedRevision:number|null):Promise<Remote>{
+async function remotePOST(document:Document, expectedRevision:number|null, accountId:string):Promise<Remote>{
  const response=await fetch("/api/cloud",{method:"POST",credentials:"same-origin",
- headers:{"Content-Type":"application/json"},body:JSON.stringify({document,expectedRevision})});
+ headers:{"Content-Type":"application/json"},body:JSON.stringify({document,expectedRevision,accountId})});
  const result=await response.json() as {revision?:number;updatedAt?:string;error?:string};
  if(!response.ok){const error=new Error(result.error||"Cloud upload failed.");(error as Error & {status:number}).status=response.status;throw error;}
  if(!result.revision||!result.updatedAt)throw new Error("Server did not confirm a revision.");
@@ -132,7 +132,7 @@ export function SyncProvider({children}:{children:React.ReactNode}){
     if(!merged.ok){setConflictList(merged.conflicts);setStatus("conflict");return;}
     let newest=remote;
     if(!isSameLedger(merged.document,remote.document)){
-      try{newest=await remotePOST(merged.document,remote.revision);}
+      try{newest=await remotePOST(merged.document,remote.revision,user);}
       catch(e){
         if((e as {status?:number})?.status===409){
           setMessage("The cloud changed during upload; retrying safely.");
@@ -206,7 +206,7 @@ export function SyncProvider({children}:{children:React.ReactNode}){
     if(accountRef.current!==user)throw Error("Account changed. Try again.");
     if(!remote){
       if(!local.business.name.trim())throw Error("Set up a business before enabling cloud sync.");
-      const uploaded=await remotePOST(local,null);
+      const uploaded=await remotePOST(local,null,user);
       const next:SyncMeta={key:"active",accountId:user,enabled:true,revision:uploaded.revision,base:local,lastSyncedAt:Date.now()};
       await storeSyncMeta(next);metaRef.current=next;setMeta(next);setCloud(uploaded);
     }else if(choice==="cloud"||isSameLedger(remote.document,local)){
@@ -220,7 +220,7 @@ export function SyncProvider({children}:{children:React.ReactNode}){
     }else{
       // First-time overwrite is explicit, never a side effect of sign-in.
       await createRecoveryCopy(remote.document,user,"Cloud records before explicit first-device replacement");
-      const uploaded=await remotePOST(local,remote.revision);
+      const uploaded=await remotePOST(local,remote.revision,user);
       const next:SyncMeta={key:"active",accountId:user,enabled:true,revision:uploaded.revision,base:local,lastSyncedAt:Date.now()};
       await storeSyncMeta(next);metaRef.current=next;setMeta(next);setCloud(uploaded);
     }
@@ -245,7 +245,7 @@ export function SyncProvider({children}:{children:React.ReactNode}){
     let resolved:Remote=latest.snapshot;
     if(choice==="device"){
       if(!isSameLedger(docRef.current,local))throw Error("Local ledger changed while resolving. Retry.");
-      resolved=await remotePOST(local,latest.snapshot.revision);
+      resolved=await remotePOST(local,latest.snapshot.revision,user);
     }else{
       if(!isSameLedger(docRef.current,local))throw Error("Local ledger changed while resolving. Retry.");
       replace(latest.snapshot.document);
