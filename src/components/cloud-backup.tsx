@@ -100,7 +100,7 @@ export function CloudBackup() {
 
   return <section className="surface settings-section cloud-section" aria-label="Mezgeb cloud backup">
     <div className="surface-title"><h2>Cloud backup</h2><Cloud size={19}/></div>
-    <p className="muted">Optional, secure, account-based snapshots. **Not** live multi-device synchronization; your ledger still saves locally first.</p>
+    <p className="muted">Optional, secure, account-based snapshots. Not live multi-device synchronization; your ledger still saves locally first.</p>
     {!configured && <p className="notice">Supabase is not configured in this deployment. Local backups remain available above.</p>}
     {configured && status === "loading" && <p className="muted">Checking account and backup status…</p>}
     {configured && status === "signedOut" && <div className="cloud-status">
