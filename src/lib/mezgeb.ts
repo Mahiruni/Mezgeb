@@ -39,6 +39,29 @@ export const documentSchema: z.ZodType<Document> = z.object({
   id:z.string(),type:z.enum(["credit","payment"]),cents:finiteMoney.positive(),note:z.string().max(1000),createdAt:z.number().finite()
  }))})).max(100000),
  nextDraft:z.number().int().positive(),updatedAt:z.number().finite()
+}).superRefine((doc,ctx)=>{
+ // Duplicate IDs would be silently collapsed by the keyed three-way merge.
+ // Reject damaged or malicious imports before local storage or cloud upload.
+ const entries=new Set<string>();
+ const customers=new Set<string>();
+ const receipts=new Set<string>();
+ for(const [index,entry] of doc.entries.entries()){
+  if(entries.has(entry.id))ctx.addIssue({code:"custom",path:["entries",index,"id"],message:"Duplicate transaction ID."});
+  entries.add(entry.id);
+  if(entry.receipt){
+   if(receipts.has(entry.receipt.number))ctx.addIssue({code:"custom",path:["entries",index,"receipt"],message:"Duplicate receipt reference."});
+   receipts.add(entry.receipt.number);
+  }
+ }
+ for(const [index,customer] of doc.customers.entries()){
+  if(customers.has(customer.id))ctx.addIssue({code:"custom",path:["customers",index,"id"],message:"Duplicate customer ID."});
+  customers.add(customer.id);
+  const events=new Set<string>();
+  for(const [eventIndex,event] of customer.events.entries()){
+   if(events.has(event.id))ctx.addIssue({code:"custom",path:["customers",index,"events",eventIndex,"id"],message:"Duplicate Dube event ID."});
+   events.add(event.id);
+  }
+ }
 });
 
 export type SyncMeta = {
