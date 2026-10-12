@@ -46,6 +46,19 @@ export function AccountForm({ enabled }:{ enabled: boolean }) {
       setError(e instanceof Error?e.message:"Authentication is temporarily unavailable.");
     }finally{setBusy(false);}
   };
+  const resend = async()=>{
+    if(!enabled||!email.trim()||busy)return;
+    setBusy(true);setError("");setMessage("");
+    try{
+      const {error:resendError}=await createClient().auth.resend({
+        type:"signup",email:email.trim(),
+        options:{emailRedirectTo:window.location.origin+"/auth/callback"}
+      });
+      if(resendError)throw resendError;
+      setMessage("If this address has an unverified account, a new confirmation email will be sent.");
+    }catch(e){setError(e instanceof Error?e.message:"Confirmation message could not be sent.");}
+    finally{setBusy(false);}
+  };
   return <main className="auth-shell">
     <div className="auth-brand"><span className="brand-symbol"><BookOpenText size={24}/></span><span>Mezgeb <small>መዝገብ</small></span></div>
     <section className="auth-panel">
@@ -63,11 +76,12 @@ export function AccountForm({ enabled }:{ enabled: boolean }) {
         {message&&<p className="notice" role="status">{message}</p>}
         <button className="btn primary full" disabled={!enabled||busy} type="submit">{busy?"Please wait…":mode==="signin"?"Sign in":mode==="signup"?"Create account":"Email recovery link"}</button>
       </form>
+      {mode!=="reset"&&<button className="btn subtle full" type="button" disabled={!enabled||busy||!email.trim()} onClick={()=>void resend()}>Resend verification email</button>}
       <div className="auth-switch">
         {mode==="signin"?<><button onClick={()=>{setMode("reset");setError("");}}>Forgot password?</button><button onClick={()=>{setMode("signup");setError("");}}>Create account</button></>:
         <button onClick={()=>{setMode("signin");setError("");setMessage("");}}>Back to sign in</button>}
       </div>
-      <p className="auth-scope"><ShieldCheck size={15}/> Note: account access is being prepared. Financial records will not sync until the next backend integration phase is completed and tested.</p>
+      <p className="auth-scope"><ShieldCheck size={15}/> Account email confirmation is required for cloud sync. Your device remains offline-first, and the first cloud pairing requires your approval.</p>
     </section>
     <footer className="auth-footer"><Mail size={14}/> Mezgeb by Hisab Technologies · Financial records remain on this device.</footer>
   </main>;
