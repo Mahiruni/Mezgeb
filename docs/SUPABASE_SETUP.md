@@ -1,6 +1,6 @@
 # Mezgeb — Supabase connection handoff
 
-This branch prepares Supabase authentication only. Financial records, subscriptions, receipts, and Dube remain browser-local.
+This branch implements Supabase authentication and an explicit manual cloud snapshot backup. Transactions and Dube continue to save locally first; backup/restore is opt-in, not live multi-device sync.
 
 ## 1. Project
 
@@ -15,10 +15,10 @@ Add explicit authorized preview URLs individually for test deployments. Avoid pe
 
 ## 3. Environment variables in Vercel project mezgeb
 
-NEXT_PUBLIC_SUPABASE_URL — new project's API URL.
+NEXT_PUBLIC_SUPABASE_URL — https://pqfzkyssvxmboprkmdga.supabase.co.
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY — project's public publishable key.
 
-Never put a service-role key or payment secret in a NEXT_PUBLIC_ variable. Never commit credentials. Redeploy Preview after changing variables.
+Preview public configuration was created for Mezgeb and is separate from Production. Never put a service-role key or payment secret in a NEXT_PUBLIC_ variable. Never commit credentials. Redeploy Preview after changing variables. The Vercel connector only exposed encrypted Production variable metadata, so the existing Production values could not be independently verified.
 
 ## 4. Authentication pages
 
@@ -30,9 +30,9 @@ Use Supabase Auth email/password settings, SMTP, confirmation templates, and cal
 
 ## 5. Database remains pending
 
-The SQL file under supabase/migrations is only a reviewable draft and has not been applied. Harden RLS, immutable financial transactions, receipt numbering, tenant isolation, and transactional credit balances before production connection.
+The two migrations in supabase/migrations are APPLIED to the dedicated Mezgeb project (pqfzkyssvxmboprkmdga): 20261012182759_mezgeb_secure_foundation and 20261012183138_mezgeb_foreign_key_indexes. Ten application tables exist, RLS is on for each, and the Supabase security advisor found no errors. Full authenticated two-user isolation tests, immutable canonical ledger writes, receipts, payment verification, and live sync remain release blockers.
 
-Signing into Supabase is not cloud syncing. The current local ledger must not be represented as server-backed.
+Authenticated POST /api/cloud creates or updates a revisioned manual cloud backup, and GET /api/cloud retrieves it. Settings includes explicit backup and restore; conflicting revisions return HTTP 409. Signed-in identity alone does not turn on automatic cloud synchronization, and certified receipts are still disabled.
 
 ## 6. Deployment gating
 
