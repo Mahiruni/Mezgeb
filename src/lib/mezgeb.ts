@@ -83,6 +83,27 @@ export async function readSyncMeta():Promise<SyncMeta|null>{
 export async function storeSyncMeta(value:SyncMeta):Promise<void>{
  await db().syncStates.put(syncMetaSchema.parse(value));
 }
+/**
+ * Commit a downloaded cloud ledger and the matching cloud checkpoint atomically.
+ * Without this transaction, closing the app between those two writes can make
+ * a later sync misinterpret unsaved cloud records as local deletions.
+ */
+export async function commitCloudSnapshot(document:Document, checkpoint:SyncMeta, previous?:Document, reason="Before cloud restore"):Promise<void>{
+ const current=documentSchema.parse(document);
+ const state=syncMetaSchema.parse(checkpoint);
+ const existing=previous?documentSchema.parse(previous):null;
+ const database=db();
+ await database.transaction("rw",database.documents,database.syncStates,database.recovery,async()=>{
+  if(existing){
+   await database.recovery.put({
+    id:globalThis.crypto.randomUUID(),at:Date.now(),reason:reason.slice(0,180),
+    accountId:state.accountId,document:existing
+   });
+  }
+  await database.documents.put({key:"main",value:current});
+  await database.syncStates.put(state);
+ });
+}
 export async function disconnectSyncAccount():Promise<void>{
  await db().syncStates.delete("active");
 }
