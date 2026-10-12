@@ -57,3 +57,7 @@
 .sync-recovery-list small{display:block;color:var(--muted);font-size:10px}
 .sync-recovery-list .btn{font-size:10px;min-height:36px;padding:5px 9px}
 @media(max-width:580px){.cloud-buttons{flex-direction:column}.onboard-restore{margin-top:18px}.sync-recovery-list>div{flex-wrap:wrap}}
+
+.local-pill .status-dot.synced{background:var(--green);box-shadow:0 0 0 3px rgba(25,157,98,.12)}
+.local-pill .status-dot.conflict{background:var(--red);box-shadow:0 0 0 3px rgba(210,83,67,.12)}
+.local-pill:hover{color:var(--ink);border-color:var(--muted)}
