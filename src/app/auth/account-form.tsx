@@ -24,23 +24,39 @@ export function AccountForm({ enabled }:{ enabled: boolean }) {
     try{
       const client=createClient();
       if(mode==="signin"){
-        const {error:authError}=await client.auth.signInWithPassword({email:email.trim(),password});
+        const {data,error:authError}=await client.auth.signInWithPassword({email:email.trim(),password});
         if(authError)throw authError;
-        router.push("/");router.refresh();
+        // A session is not proof of email confirmation if the Auth project
+        // is misconfigured; don't allow the UI to imply a verified identity.
+        if(!data.user?.email_confirmed_at){
+          await client.auth.signOut();
+          setError("Confirm your email before signing in. Use Resend verification email if needed.");
+          return;
+        }
+        router.replace("/settings");router.refresh();
       }else if(mode==="signup"){
         if(password.length<12)throw Error("Use at least 12 characters for your password.");
-        const {error:authError}=await client.auth.signUp({
+        const {data,error:authError}=await client.auth.signUp({
           email:email.trim(),password,
           options:{emailRedirectTo:window.location.origin+"/auth/callback"}
         });
         if(authError)throw authError;
-        setMessage("If the address can be registered, check your inbox to verify it. Then sign in.");
+        // Supabase returns a session immediately when Confirm Email is off.
+        // Fail closed: new accounts must not start verified financial sync
+        // from a project where sign-up confirmation has been disabled.
+        if(data.session){
+          await client.auth.signOut();
+          setError("Email confirmation is disabled in the Mezgeb Auth project. For account security, an administrator must enable Confirm Email before registrations can be used.");
+          return;
+        }
+        setPassword("");
+        setMessage("If this address can be registered, open the verification link sent to your inbox. Use the same browser to complete the link, then sign in.");
       }else{
         const {error:authError}=await client.auth.resetPasswordForEmail(email.trim(),{
           redirectTo:window.location.origin+"/auth/callback?next=/auth/update-password"
         });
         if(authError)throw authError;
-        setMessage("If the address has an account, a recovery email will be sent.");
+        setMessage("If this address has an account, follow the recovery email on the same device and browser where you requested it.");
       }
     }catch(e){
       setError(e instanceof Error?e.message:"Authentication is temporarily unavailable.");
