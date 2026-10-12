@@ -1,6 +1,6 @@
 # Mezgeb — Supabase connection handoff
 
-This branch implements Supabase authentication and an explicit manual cloud snapshot backup. Transactions and Dube continue to save locally first; backup/restore is opt-in, not live multi-device sync.
+This branch implements Supabase authentication and **automatic offline-to-cloud snapshot synchronization after explicit device pairing**. Transactions and Dube save locally first; server revisions, three-way merges and recovery copies protect updates. It is still a Preview release until real inbox and browser testing pass.
 
 ## 1. Project
 
@@ -30,9 +30,9 @@ Use Supabase Auth email/password settings, SMTP, confirmation templates, and cal
 
 ## 5. Database remains pending
 
-The two migrations in supabase/migrations are APPLIED to the dedicated Mezgeb project (pqfzkyssvxmboprkmdga): 20261012182759_mezgeb_secure_foundation and 20261012183138_mezgeb_foreign_key_indexes. Ten application tables exist, RLS is on for each, and the Supabase security advisor found no errors. Full authenticated two-user isolation tests, immutable canonical ledger writes, receipts, payment verification, and live sync remain release blockers.
+The two migrations in supabase/migrations are APPLIED to the dedicated Mezgeb project (pqfzkyssvxmboprkmdga): 20261012182759_mezgeb_secure_foundation and 20261012183138_mezgeb_foreign_key_indexes. Ten application tables exist, RLS is on for each, and the Supabase security advisor found no errors. A rolled-back two-owner SQL exercise verified business and snapshot isolation, cross-account write denial, and stale revision detection. Real-user authentication tests, browser-based cross-device sync, immutable canonical ledger writes, fiscal receipts and payment verification remain release blockers.
 
-Authenticated POST /api/cloud creates or updates a revisioned manual cloud backup, and GET /api/cloud retrieves it. Settings includes explicit backup and restore; conflicting revisions return HTTP 409. Signed-in identity alone does not turn on automatic cloud synchronization, and certified receipts are still disabled.
+GET /api/cloud loads the private revisioned snapshot, and POST /api/cloud uses an authenticated account-bound conditional update. Settings explicitly pairs a verified identity to the device. **After pairing**, automatic sync merges independent financial entries, refuses conflicting edits, preserves recoverable local history and retries after reconnection. First sign-in alone never switches on cloud uploads; certified receipts remain disabled. See SYNC_RELEASE_GATE.md.
 
 ## 6. Deployment gating
 
