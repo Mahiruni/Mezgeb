@@ -4,7 +4,7 @@ import { documentSchema } from "@/lib/mezgeb";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
-const headers = { "Cache-Control": "private, no-store, max-age=0" };
+const headers = { "Cache-Control": "private, no-store, max-age=0", "Vary": "Cookie" };
 const fail = (status: number, error: string) => NextResponse.json({ error }, { status, headers });
 
 async function authenticated() {
@@ -12,7 +12,7 @@ async function authenticated() {
   if (!client) return null;
   // Never authorize financial data access via unvalidated getSession() user data.
   const { data, error } = await client.auth.getUser();
-  return error || !data.user ? null : { client, userId: data.user.id };
+  return error || !data.user || !data.user.email_confirmed_at ? null : { client, userId: data.user.id };
 }
 
 async function ownedBusiness(client: NonNullable<Awaited<ReturnType<typeof authenticated>>>["client"], userId: string) {
@@ -59,6 +59,9 @@ const uploadSchema = z.object({
  * overwrites. This is not offline auto-sync and not certified receipt issuance.
  */
 export async function POST(request: NextRequest) {
+  // Refuse cross-origin cookie requests and non-JSON submissions (CSRF defence).
+  if (request.headers.get("origin") !== request.nextUrl.origin) return fail(403, "Cross-origin uploads are not allowed.");
+  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) return fail(415, "JSON content type is required.");
   const auth = await authenticated();
   if (!auth) return fail(401, "Sign in to your Mezgeb account first.");
   if (Number(request.headers.get("content-length") || "0") > 2_250_000) {
