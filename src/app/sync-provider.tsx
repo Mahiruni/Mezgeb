@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { useLedger } from "./providers";
 import { createClient } from "@/lib/supabase/client";
 import { getSupabaseConfig } from "@/lib/supabase/config";
-import { type Document, type SyncMeta, readSyncMeta, storeSyncMeta, disconnectSyncAccount, createRecoveryCopy, readRecoveryCopies, type RecoveryCopy } from "@/lib/mezgeb";
+import { type Document, type SyncMeta, readSyncMeta, storeSyncMeta, disconnectSyncAccount, createRecoveryCopy, commitCloudSnapshot, readRecoveryCopies, type RecoveryCopy } from "@/lib/mezgeb";
 import { isSameLedger, mergeLedgers, type Conflict } from "@/lib/sync/merge";
 
 export type SyncStatus =
@@ -144,23 +144,31 @@ export function SyncProvider({children}:{children:React.ReactNode}){
       }
     }
     if(accountRef.current!==user||currentRun!==generation.current)return;
+    // Financial edits made while the request was in flight must be handled
+    // in the next merge cycle rather than overwritten by this one.
+    await flush();
+    if(!isSameLedger(docRef.current,local)){
+      setStatus("error");setMessage("New local records appeared during sync. Retrying without replacing them.");
+      setTick(n=>n+1);return;
+    }
+    const mergedForDevice:Document={
+      ...merged.document,locale:docRef.current.locale,theme:docRef.current.theme
+    };
     const now=Date.now();
     const next:SyncMeta={key:"active",accountId:user,enabled:true,
-      revision:newest.revision,base:merged.document,lastSyncedAt:now};
-    await storeSyncMeta(next);
+      revision:newest.revision,base:mergedForDevice,lastSyncedAt:now};
+    if(!isSameLedger(local,mergedForDevice)){
+      // The ledger and its cloud checkpoint must survive crashes together.
+      await commitCloudSnapshot(mergedForDevice,next,docRef.current,
+        "Before automatic merge from cloud revision "+remote.revision);
+      if(accountRef.current===user&&isSameLedger(docRef.current,local))replace(mergedForDevice);
+    }else{
+      await storeSyncMeta(next);
+    }
     metaRef.current=next;
     setMeta(next);setLastSyncedAt(now);
-    setCloud(newest);setConflictList([]);
-    // The user may have entered a transaction during network IO; never replace
-    // that newer local state, because it has not been incorporated in this merge.
-    if(isSameLedger(docRef.current,local)){
-      if(!isSameLedger(docRef.current,merged.document)){
-        await createRecoveryCopy(local,user,"Before automatic merge from cloud revision "+remote.revision);
-        if(accountRef.current===user&&isSameLedger(docRef.current,local))replace(merged.document);
-      }
-    }else{
-      setTick(n=>n+1);
-    }
+    setCloud(newest);setConflictList([]);setRecovery(await readRecoveryCopies(user));
+    if(!isSameLedger(docRef.current,mergedForDevice))setTick(n=>n+1);
     setStatus("synced");setMessage("");
   }catch(e){
     setStatus(statusOfError(e,isOnline()));
@@ -210,13 +218,20 @@ export function SyncProvider({children}:{children:React.ReactNode}){
       const next:SyncMeta={key:"active",accountId:user,enabled:true,revision:uploaded.revision,base:local,lastSyncedAt:Date.now()};
       await storeSyncMeta(next);metaRef.current=next;setMeta(next);setCloud(uploaded);
     }else if(choice==="cloud"||isSameLedger(remote.document,local)){
-      if(!isSameLedger(local,remote.document)){
-        await createRecoveryCopy(local,user,"Before linking cloud records to this device");
-        if(!isSameLedger(docRef.current,local))throw Error("A local record changed while linking; retry.");
-        replace(remote.document);
-      }
-      const next:SyncMeta={key:"active",accountId:user,enabled:true,revision:remote.revision,base:remote.document,lastSyncedAt:Date.now()};
-      await storeSyncMeta(next);metaRef.current=next;setMeta(next);setCloud(remote);
+      await flush();
+      if(!isSameLedger(docRef.current,local)||accountRef.current!==user)
+        throw Error("The account or local ledger changed during linking; retry.");
+      const documentForDevice:Document={
+        ...remote.document,locale:docRef.current.locale,theme:docRef.current.theme
+      };
+      const next:SyncMeta={key:"active",accountId:user,enabled:true,
+        revision:remote.revision,base:documentForDevice,lastSyncedAt:Date.now()};
+      if(!isSameLedger(local,documentForDevice)){
+        await commitCloudSnapshot(documentForDevice,next,docRef.current,
+          "Before linking cloud records to this device");
+        if(accountRef.current===user&&isSameLedger(docRef.current,local))replace(documentForDevice);
+      }else await storeSyncMeta(next);
+      metaRef.current=next;setMeta(next);setCloud(remote);
     }else{
       // First-time overwrite is explicit, never a side effect of sign-in.
       await createRecoveryCopy(remote.document,user,"Cloud records before explicit first-device replacement");
@@ -248,11 +263,21 @@ export function SyncProvider({children}:{children:React.ReactNode}){
       resolved=await remotePOST(local,latest.snapshot.revision,user);
     }else{
       if(!isSameLedger(docRef.current,local))throw Error("Local ledger changed while resolving. Retry.");
-      replace(latest.snapshot.document);
     }
+    await flush();
+    if(accountRef.current!==user||!isSameLedger(docRef.current,local))
+      throw Error("Local ledger changed during conflict resolution. Retry.");
+    const resolvedForDevice:Document={
+      ...resolved.document,locale:docRef.current.locale,theme:docRef.current.theme
+    };
     const next:SyncMeta={key:"active",accountId:user,enabled:true,
-      revision:resolved.revision,base:resolved.document,lastSyncedAt:Date.now()};
-    await storeSyncMeta(next);metaRef.current=next;setMeta(next);setCloud(resolved);
+      revision:resolved.revision,base:resolvedForDevice,lastSyncedAt:Date.now()};
+    if(choice==="cloud"&&!isSameLedger(local,resolvedForDevice)){
+      await commitCloudSnapshot(resolvedForDevice,next,docRef.current,
+        "Before replacing local records during conflict resolution");
+      if(accountRef.current===user&&isSameLedger(docRef.current,local))replace(resolvedForDevice);
+    }else await storeSyncMeta(next);
+    metaRef.current=next;setMeta(next);setCloud(resolved);
     setConflictList([]);setStatus("synced");setLastSyncedAt(next.lastSyncedAt);
     setRecovery(await readRecoveryCopies(user));setMessage("Conflict resolved. Both versions were retained as recovery copies.");
   }catch(e){setMessage(errMessage(e));setStatus("conflict");}
