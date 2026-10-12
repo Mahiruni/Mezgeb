@@ -151,8 +151,20 @@ export function SyncProvider({children}:{children:React.ReactNode}){
     // in the next merge cycle rather than overwritten by this one.
     await flush();
     if(!isSameLedger(docRef.current,local)){
-      setStatus("error");setMessage("New local records appeared during sync. Retrying without replacing them.");
-      setTick(n=>n+1);return;
+      // A request may have successfully uploaded version A while the person
+      // edited version B on this device. Persist the server-ACKNOWLEDGED
+      // revision as our common ancestor before attempting B. Otherwise the
+      // next 3-way merge may mistake A -> B for a concurrent conflict or
+      // repeatedly retry an obsolete cloud revision.
+      const acknowledged:SyncMeta={
+        key:"active",accountId:user,enabled:true,
+        revision:newest.revision,base:newest.document,lastSyncedAt:Date.now()
+      };
+      await storeSyncMeta(acknowledged);
+      metaRef.current=acknowledged;setMeta(acknowledged);
+      setCloud(newest);setLastSyncedAt(acknowledged.lastSyncedAt);
+      setMessage("New edits were saved locally while syncing; sending the latest version next.");
+      setStatus("syncing");setTick(n=>n+1);return;
     }
     const mergedForDevice:Document={
       ...merged.document,locale:docRef.current.locale,theme:docRef.current.theme
