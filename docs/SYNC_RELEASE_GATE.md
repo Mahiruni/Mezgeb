@@ -45,6 +45,10 @@
 ## Recovery and limits
 
 - Recovery copies are kept on-device in IndexedDB, linked to the user identity (up to 20 recent copies per linked account).
+- Restoring an older recovery copy sets a **durable holdForReview flag** before replacing device data. Subsequent sessions and retries remain blocked until an explicit Keep Cloud/Keep Device resolution; restored history cannot automatically remove cloud financial entries.
+- Legacy JSON and older-browser imports are blocked while this device is paired for automatic sync. Unlink and export first to prevent unreviewed bulk deletions.
+- The client checkpoints a successfully acknowledged cloud revision even if additional edits arrived during the network request, so edits made during an upload are retried from the correct ancestor.
+- Import/sync validation rejects duplicate ledger IDs, Dube event IDs, and draft receipt references instead of silently collapsing them.
 - Export financial data to JSON regularly; browser storage can be cleared by the user or operating system.
 - Cloud snapshots are JSON records limited to ~2 MB and are NOT per-record incremental server writes.
 - Automatic sync requires the browser app to be running. It is not a guaranteed always-on background Android service.
