@@ -66,12 +66,13 @@ export const documentSchema: z.ZodType<Document> = z.object({
 
 export type SyncMeta = {
   key:"active"; accountId:string; revision:number; base:Document;
-  lastSyncedAt:number; enabled:true
+  lastSyncedAt:number; enabled:true; holdForReview?:boolean
 };
 export type RecoveryCopy = { id:string; at:number; reason:string; accountId:string; document:Document };
 export const syncMetaSchema = z.object({
   key:z.literal("active"),accountId:z.string().uuid(),revision:z.number().int().positive(),
-  base:documentSchema,lastSyncedAt:z.number().finite(),enabled:z.literal(true)
+  base:documentSchema,lastSyncedAt:z.number().finite(),enabled:z.literal(true),
+  holdForReview:z.boolean().optional()
 });
 class MezgebLocalDB extends Dexie {
  documents!: Table<{ key: string; value: Document }, string>;
