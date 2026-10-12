@@ -260,8 +260,11 @@ export function SyncProvider({children}:{children:React.ReactNode}){
  };
 
  const disconnect=async()=>{
-  if(!accountId||!metaRef.current)return;
-  await createRecoveryCopy(await flush(),accountId,"Before unlinking cloud sync");
+  const linked=metaRef.current;
+  if(!linked)return;
+  // Recovery history belongs to the account previously paired to this device,
+  // not any new identity that happens to have signed in afterward.
+  await createRecoveryCopy(await flush(),linked.accountId,"Before unlinking cloud sync");
   await disconnectSyncAccount();
   setMeta(null);metaRef.current=null;setLinkedAccountId(null);setCloud(null);
   setStatus("not-linked");setMessage("Automatic synchronization disabled. Local financial records remain on this device.");
