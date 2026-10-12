@@ -44,3 +44,16 @@ describe("durable local sync checkpoint and recovery",()=>{
   expect((await readSyncMeta())?.revision).toBe(2);
  });
 });
+
+
+describe("persistent recovery review gate",()=>{
+ it("remembers a review hold across IndexedDB reads",async()=>{
+  const before=await readSyncMeta();
+  const paused={...checkpoint(documentWith(3000),10),holdForReview:true as const};
+  await storeSyncMeta(paused);
+  const restored=await readSyncMeta();
+  expect(restored?.holdForReview).toBe(true);
+  expect(restored?.revision).toBe(10);
+  if(before)await storeSyncMeta(before);
+ });
+});
