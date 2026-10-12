@@ -49,6 +49,7 @@ export function SyncProvider({children}:{children:React.ReactNode}){
  const [accountId,setAccountId]=useState<string|null>(null);
  const [linkedAccountId,setLinkedAccountId]=useState<string|null>(null);
  const [meta,setMeta]=useState<SyncMeta|null>(null);
+ const [metaLoaded,setMetaLoaded]=useState(false);
  const [cloud,setCloud]=useState<Remote|null>(null);
  const [lastSyncedAt,setLastSyncedAt]=useState<number|null>(null);
  const [conflictList,setConflictList]=useState<Conflict[]>([]);
@@ -94,11 +95,13 @@ export function SyncProvider({children}:{children:React.ReactNode}){
   setLinkedAccountId(saved?.accountId||null);
   setLastSyncedAt(saved?.lastSyncedAt||null);
   if(saved)setRecovery(await readRecoveryCopies(saved.accountId));
+  setMetaLoaded(true);
  },[]);
  useEffect(()=>{if(ready)void refreshMeta().catch(e=>{setStatus("error");setMessage(errMessage(e));});},[ready,refreshMeta]);
 
  useEffect(()=>{
   if(!activeConfig||!ready)return;
+  if(!metaLoaded){setStatus("checking");return;}
   if(!accountId){setStatus("signed-out");return;}
   if(!isVerified){setStatus("unverified");return;}
   if(meta&&meta.accountId!==accountId){setStatus("account-switch");return;}
@@ -106,7 +109,7 @@ export function SyncProvider({children}:{children:React.ReactNode}){
   if(!isOnline()){setStatus("offline");return;}
   if(statusRef.current==="conflict")return;
   setStatus("syncing");
- },[accountId,isVerified,meta,ready]);
+ },[accountId,isVerified,meta,ready,metaLoaded]);
 
  const sync=useCallback(async()=>{
   if(!activeConfig||!ready||!accountRef.current||lock.current||statusRef.current==="conflict")return;
@@ -205,7 +208,7 @@ export function SyncProvider({children}:{children:React.ReactNode}){
 
  const connect=async(choice:"device"|"cloud")=>{
   const user=accountId;
-  if(!user||!isVerified||!ready||metaRef.current||lock.current)return;
+  if(!user||!isVerified||!ready||!metaLoaded||metaRef.current||lock.current)return;
   lock.current=true;setStatus("syncing");setMessage("");
   try{
     const local=await flush();
