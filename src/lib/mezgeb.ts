@@ -102,6 +102,9 @@ export async function commitCloudSnapshot(document:Document, checkpoint:SyncMeta
   }
   await database.documents.put({key:"main",value:current});
   await database.syncStates.put(state);
+  const history=await database.recovery.where("accountId").equals(state.accountId).toArray();
+  history.sort((a,b)=>b.at-a.at);
+  if(history.length>20)await database.recovery.bulkDelete(history.slice(20).map(x=>x.id));
  });
 }
 export async function disconnectSyncAccount():Promise<void>{
@@ -112,12 +115,12 @@ export async function createRecoveryCopy(document:Document, accountId:string, re
    accountId,document:documentSchema.parse(document)};
  await db().recovery.put(record);
  // Keep the latest 20 recoveries per account, never overwrite the only existing copy.
- const all=await db().recovery.where("accountId").equals(accountId).reverse().sortBy("at");
+ const all=(await db().recovery.where("accountId").equals(accountId).toArray()).sort((a,b)=>b.at-a.at);
  const older=all.slice(20).map(x=>x.id);
  if(older.length)await db().recovery.bulkDelete(older);
 }
 export async function readRecoveryCopies(accountId:string):Promise<RecoveryCopy[]>{
- return db().recovery.where("accountId").equals(accountId).reverse().sortBy("at");
+ return (await db().recovery.where("accountId").equals(accountId).toArray()).sort((a,b)=>b.at-a.at);
 }
 export function id(){return globalThis.crypto.randomUUID();}
 export function toCents(value:string|number):number{
