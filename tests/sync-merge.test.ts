@@ -87,3 +87,19 @@ describe("lossless three-way financial sync",()=>{
   expect(isSameLedger(a,b)).toBe(true);
  });
 });
+
+
+describe("upload-in-flight reconciliation",()=>{
+ it("can replay newer on-device edits after acknowledging an earlier upload",()=>{
+  const before=make();
+  const sent={...before,entries:[entry("first",1200)]};
+  const editedWhileUploading={...sent,entries:[entry("first",1400),entry("second",2500)]};
+  // The server acknowledged sent; it becomes the new common ancestor.
+  const result=mergeLedgers(sent,editedWhileUploading,sent);
+  expect(result.ok).toBe(true);
+  if(result.ok){
+   expect(result.document.entries).toHaveLength(2);
+   expect(result.document.entries.find(e=>e.id==="first")?.cents).toBe(1400);
+  }
+ });
+});
