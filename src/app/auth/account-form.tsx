@@ -37,7 +37,7 @@ export function AccountForm({ enabled }:{ enabled: boolean }) {
         setMessage("If the address can be registered, check your inbox to verify it. Then sign in.");
       }else{
         const {error:authError}=await client.auth.resetPasswordForEmail(email.trim(),{
-          redirectTo:window.location.origin+"/auth/callback"
+          redirectTo:window.location.origin+"/auth/callback?next=/auth/update-password"
         });
         if(authError)throw authError;
         setMessage("If the address has an account, a recovery email will be sent.");
