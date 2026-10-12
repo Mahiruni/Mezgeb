@@ -29,3 +29,25 @@ describe("cloud-backup validation contract",()=>{
   expect(documentSchema.safeParse(doc).success).toBe(false);
  });
 });
+
+
+describe("financial import identity validation",()=>{
+ it("rejects duplicate transaction IDs rather than losing records during merge",()=>{
+  const source=fixture();
+  source.entries.push({...source.entries[0],cents:2500});
+  expect(documentSchema.safeParse(source).success).toBe(false);
+ });
+ it("rejects duplicate receipt numbers assigned to distinct sales",()=>{
+  const source=fixture();
+  source.entries.push({...source.entries[0],id:"d5749f84-565c-47ce-9e89-c1ea99e496b3",cents:3000});
+  expect(documentSchema.safeParse(source).success).toBe(false);
+ });
+ it("rejects duplicate Dube event IDs",()=>{
+  const source=fixture();
+  source.customers=[{id:"customer-one",name:"Yonas",phone:"",events:[
+   {id:"paid-1",type:"credit",cents:2500,note:"",createdAt:1},
+   {id:"paid-1",type:"payment",cents:1000,note:"",createdAt:2}
+  ]}];
+  expect(documentSchema.safeParse(source).success).toBe(false);
+ });
+});
