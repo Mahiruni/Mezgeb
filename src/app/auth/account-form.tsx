@@ -85,6 +85,7 @@ export function AccountForm({ enabled }:{ enabled: boolean }) {
       <p>{mode==="signin"?"Sign in securely with your Mezgeb account.":mode==="signup"?"Start with one secure identity for your business.":"We'll email you a recovery link."}</p>
       {!enabled&&<div className="notice" role="status"><ShieldCheck size={19}/> Secure account sign-in is waiting for the dedicated Mezgeb Supabase project. Your existing ledger remains local and accessible.</div>}
       {linkError&&<p className="form-error" role="alert">That confirmation link could not be verified. Request another link.</p>}
+      {query.get("password")==="updated"&&<p className="notice" role="status">Your password was updated. Sign in using the new password.</p>}
       <form onSubmit={submit} className="auth-form">
         <label>Email address<input type="email" autoComplete="email" required disabled={!enabled||busy} maxLength={250} placeholder="you@business.com" value={email} onChange={e=>setEmail(e.target.value)}/></label>
         {mode!=="reset"&&<label>Password<div className="password-input"><input type={visible?"text":"password"} autoComplete={mode==="signup"?"new-password":"current-password"} minLength={mode==="signup"?12:1} required disabled={!enabled||busy} value={password} onChange={e=>setPassword(e.target.value)}/><button type="button" aria-label={visible?"Hide password":"Show password"} onClick={()=>setVisible(v=>!v)}>{visible?<EyeOff size={17}/>:<Eye size={17}/>}</button></div></label>}
@@ -98,6 +99,7 @@ export function AccountForm({ enabled }:{ enabled: boolean }) {
         <button onClick={()=>{setMode("signin");setError("");setMessage("");}}>Back to sign in</button>}
       </div>
       <p className="auth-scope"><ShieldCheck size={15}/> Account email confirmation is required for cloud sync. Your device remains offline-first, and the first cloud pairing requires your approval.</p>
+      <Link className="btn subtle full" href="/auth/status">Check my verified account session</Link>
     </section>
     <footer className="auth-footer"><Mail size={14}/> Mezgeb by Hisab Technologies · Financial records remain on this device.</footer>
   </main>;
