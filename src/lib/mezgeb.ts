@@ -41,9 +41,24 @@ export const documentSchema: z.ZodType<Document> = z.object({
  nextDraft:z.number().int().positive(),updatedAt:z.number().finite()
 });
 
+export type SyncMeta = {
+  key:"active"; accountId:string; revision:number; base:Document;
+  lastSyncedAt:number; enabled:true
+};
+export type RecoveryCopy = { id:string; at:number; reason:string; accountId:string; document:Document };
+export const syncMetaSchema = z.object({
+  key:z.literal("active"),accountId:z.string().uuid(),revision:z.number().int().positive(),
+  base:documentSchema,lastSyncedAt:z.number().finite(),enabled:z.literal(true)
+});
 class MezgebLocalDB extends Dexie {
  documents!: Table<{ key: string; value: Document }, string>;
- constructor(){super("mezgeb_local_v2");this.version(1).stores({documents:"key"});}
+ syncStates!: Table<SyncMeta,string>;
+ recovery!: Table<RecoveryCopy,string>;
+ constructor(){
+   super("mezgeb_local_v2");
+   this.version(1).stores({documents:"key"});
+   this.version(2).stores({documents:"key",syncStates:"key",recovery:"id,at,accountId"});
+ }
 }
 let database: MezgebLocalDB | null = null;
 function db(){if(!database)database=new MezgebLocalDB();return database;}
@@ -57,6 +72,31 @@ export async function loadDocument():Promise<Document>{
 export async function saveDocument(value:Document):Promise<void>{
   const safe=documentSchema.parse(value);
   await db().documents.put({key:"main",value:safe});
+}
+export async function readSyncMeta():Promise<SyncMeta|null>{
+ const value=await db().syncStates.get("active");
+ if(!value)return null;
+ const result=syncMetaSchema.safeParse(value);
+ if(!result.success)throw Error("Saved sync metadata is invalid; automatic sync has been stopped to protect your data.");
+ return result.data;
+}
+export async function storeSyncMeta(value:SyncMeta):Promise<void>{
+ await db().syncStates.put(syncMetaSchema.parse(value));
+}
+export async function disconnectSyncAccount():Promise<void>{
+ await db().syncStates.delete("active");
+}
+export async function createRecoveryCopy(document:Document, accountId:string, reason:string):Promise<void>{
+ const record:RecoveryCopy={id:globalThis.crypto.randomUUID(),at:Date.now(),reason:reason.slice(0,180),
+   accountId,document:documentSchema.parse(document)};
+ await db().recovery.put(record);
+ // Keep the latest 20 recoveries per account, never overwrite the only existing copy.
+ const all=await db().recovery.where("accountId").equals(accountId).reverse().sortBy("at");
+ const older=all.slice(20).map(x=>x.id);
+ if(older.length)await db().recovery.bulkDelete(older);
+}
+export async function readRecoveryCopies(accountId:string):Promise<RecoveryCopy[]>{
+ return db().recovery.where("accountId").equals(accountId).reverse().sortBy("at");
 }
 export function id(){return globalThis.crypto.randomUUID();}
 export function toCents(value:string|number):number{
