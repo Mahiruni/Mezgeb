@@ -47,6 +47,21 @@ describe("lossless three-way financial sync",()=>{
   expect(result.ok).toBe(false);
   if(!result.ok)expect(result.conflicts.some(c=>c.section==="balance")).toBe(true);
  });
+ it("never silently drops previously recorded customer repayments",()=>{
+  const paid={id:"payment1",type:"payment" as const,cents:1000,note:"",createdAt:2};
+  const credit={id:"credit1",type:"credit" as const,cents:5000,note:"",createdAt:1};
+  const base={...make(),customers:[customer([credit,paid])]};
+  const erased={...base,customers:[customer([credit])]};
+  const result=mergeLedgers(base,erased,base);
+  expect(result.ok).toBe(false);
+  if(!result.ok)expect(result.conflicts.some(x=>x.section==="dube"&&x.key==="payment1")).toBe(true);
+ });
+ it("never silently deletes a customer with credit history",()=>{
+  const base={...make(),customers:[customer([{id:"credit1",type:"credit" as const,cents:5000,note:"",createdAt:1}])]};
+  const result=mergeLedgers(base,{...base,customers:[]},base);
+  expect(result.ok).toBe(false);
+  if(!result.ok)expect(result.conflicts.some(x=>x.section==="dube"&&x.key==="customer1")).toBe(true);
+ });
  it("flags colliding local draft references from different devices",()=>{
   const base=make();
   const l={...base,entries:[{...entry("a"),receipt:{number:"DRAFT-000001",status:"draft" as const}}]};
