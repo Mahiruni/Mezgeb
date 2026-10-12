@@ -4,7 +4,7 @@
 
 Mezgeb is an Ethiopian small-business ledger: sales, expenses, estimated VAT, draft receipts, Dube credit, CSV reporting, and responsive mobile-first views.
 
-> Status: **Local-first preview**. Supabase, Chapa, and Vercel are deliberately not connected. Local drafts are NOT certified tax receipts. No live payments, cloud backup, or online authentication are provided.
+> Status: the **production deployment is still local-first**. The open feature PR has verified-session checks and automatic offline-to-cloud synchronization ready for controlled testing against the dedicated Mezgeb Supabase project. Vercel preview builds are configured. Payment processing and certified fiscal receipts are **not** enabled.
 
 ## Implemented
 
@@ -16,7 +16,9 @@ Mezgeb is an Ethiopian small-business ledger: sales, expenses, estimated VAT, dr
 - Monthly charts, CSV reports, IndexedDB storage, JSON backup/restore and explicit old HTML import.
 - English/Amharic core UI. Five additional original language choices with English fallback pending full dictionary migration.
 - HTTPS PWA service worker that caches the app shell, not financial database contents.
-- Reviewable Supabase PostgreSQL schema and owner-based RLS migration, NOT applied.
+- Supabase PostgreSQL and 10-table Row Level Security schema applied to the dedicated Mezgeb project.
+- On the feature branch: verified-email-only cloud API access; opt-in account/device pairing; automatic three-way financial merge with server revision checks; offline retries; explicit conflict resolution; and atomically committed IndexedDB recovery checkpoints.
+- Two-owner RLS isolation and stale-revision checks exercised inside rolled-back database test transactions.
 
 ## Running locally
 
@@ -48,18 +50,20 @@ The supplied HTML contains an embedded Benaiah font. The font is not redistribut
 
 Recording a payment method such as M-Pesa, Telebirr, CBE Birr or Chapa does not move money. No real payment providers are connected.
 
-Receipt numbering is DRAFT-only. Financial calculations and exports are internal tools, not an official tax filing. The proposed Supabase SQL migration does not by itself make a compliant fiscal system.
+Receipt numbering is DRAFT-only. Financial calculations and exports are internal tools, not an official tax filing. The applied Supabase SQL migrations do not by themselves make a compliant fiscal system.
 
-No online sign-in, Supabase sync, verified Chapa payment, paid entitlement activation, server-issued final receipts, multi-user access, admin dashboard, audit-log enforcement, or offline conflict reconciliation is active yet.
+Supabase sign-in and automatic, explicit-pairing cloud synchronization have been implemented on the **unmerged feature branch**. The feature still needs real inbox verification, multiple-device browser validation and PWA testing before production. Verified Chapa payments, paid entitlements, fiscal receipts, staff roles, admin dashboard and server-authoritative audit accounting are NOT active.
 
 ## Connect Supabase & Vercel later
 
 1. Link https://github.com/Mahiruni/Mezgeb to a Vercel project and verify preview builds.
-2. Create a Supabase project, review the SQL migration, and apply it after authorization and test validation.
-3. Populate NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel; keep service-role and payment secrets server-side, never public.
-4. Implement secure Auth, memberships, server data access, transaction-safe sync and authoritative receipt issuance before hosting real multi-user financial data.
+2. Dedicated Mezgeb Supabase project pqfzkyssvxmboprkmdga has been created. Its two schema migrations were applied and RLS enabled. Verify authentication, cross-tenant behavior, and all financial operations before public use.
+3. NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY are configured for Vercel Preview; Production names exist but encrypted values were not independently verifiable. Keep service-role and payment secrets server-side, never public.
+4. Authentication, revision-controlled automatic cloud sync, conflict detection and local recovery are included in the feature branch. Next verify real email delivery/recovery and two-device browser flows, then complete server-authoritative ledger posting and receipt issuance before public use.
 5. Integrate server-side Chapa initialization and authenticated verification; never activate paid plans from a browser-only callback.
 6. Add production monitoring, database backups, rate-limiting, RLS isolation tests, cross-device sync tests, and payment failure/replay tests before public launch.
+
+For implementation details and known limitations, see docs/SYNC_RELEASE_GATE.md.
 
 This repository was initially empty. The first implementation series was committed on main using GitHub. CI is configured to attempt type checks, tests and build; successful execution must be checked in GitHub Actions and is not implied by commits alone.
 

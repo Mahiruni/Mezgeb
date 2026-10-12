@@ -6,6 +6,7 @@ type Store = {
   doc: Document; ready: boolean; error: string | null;
   update: (change: (previous: Document) => Document) => void;
   replace: (next: Document) => void;
+  flush: () => Promise<Document>;
 };
 const Context = createContext<Store | null>(null);
 export function LedgerProvider({ children }: { children: React.ReactNode }) {
@@ -13,6 +14,8 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const sequence = useRef<Promise<void>>(Promise.resolve());
+  const latest = useRef(doc);
+  latest.current = doc;
 
   useEffect(() => {
     let active = true;
@@ -42,7 +45,15 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
     setDoc({ ...next, updatedAt: Date.now() });
   }, []);
 
-  return <Context.Provider value={{ doc, ready, error, update, replace }}>
+  const flush = useCallback(async () => {
+    // Wait for the local-first write queue before making any network requests.
+    await sequence.current;
+    const snapshot = latest.current;
+    await saveDocument(snapshot);
+    return snapshot;
+  }, []);
+
+  return <Context.Provider value={{ doc, ready, error, update, replace, flush }}>
     {children}
   </Context.Provider>;
 }

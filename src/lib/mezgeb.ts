@@ -39,11 +39,50 @@ export const documentSchema: z.ZodType<Document> = z.object({
   id:z.string(),type:z.enum(["credit","payment"]),cents:finiteMoney.positive(),note:z.string().max(1000),createdAt:z.number().finite()
  }))})).max(100000),
  nextDraft:z.number().int().positive(),updatedAt:z.number().finite()
+}).superRefine((doc,ctx)=>{
+ // Duplicate IDs would be silently collapsed by the keyed three-way merge.
+ // Reject damaged or malicious imports before local storage or cloud upload.
+ const entries=new Set<string>();
+ const customers=new Set<string>();
+ const receipts=new Set<string>();
+ for(const [index,entry] of doc.entries.entries()){
+  if(entries.has(entry.id))ctx.addIssue({code:"custom",path:["entries",index,"id"],message:"Duplicate transaction ID."});
+  entries.add(entry.id);
+  if(entry.receipt){
+   if(receipts.has(entry.receipt.number))ctx.addIssue({code:"custom",path:["entries",index,"receipt"],message:"Duplicate receipt reference."});
+   receipts.add(entry.receipt.number);
+  }
+ }
+ for(const [index,customer] of doc.customers.entries()){
+  if(customers.has(customer.id))ctx.addIssue({code:"custom",path:["customers",index,"id"],message:"Duplicate customer ID."});
+  customers.add(customer.id);
+  const events=new Set<string>();
+  for(const [eventIndex,event] of customer.events.entries()){
+   if(events.has(event.id))ctx.addIssue({code:"custom",path:["customers",index,"events",eventIndex,"id"],message:"Duplicate Dube event ID."});
+   events.add(event.id);
+  }
+ }
 });
 
+export type SyncMeta = {
+  key:"active"; accountId:string; revision:number; base:Document;
+  lastSyncedAt:number; enabled:true; holdForReview?:boolean
+};
+export type RecoveryCopy = { id:string; at:number; reason:string; accountId:string; document:Document };
+export const syncMetaSchema = z.object({
+  key:z.literal("active"),accountId:z.string().uuid(),revision:z.number().int().positive(),
+  base:documentSchema,lastSyncedAt:z.number().finite(),enabled:z.literal(true),
+  holdForReview:z.boolean().optional()
+});
 class MezgebLocalDB extends Dexie {
  documents!: Table<{ key: string; value: Document }, string>;
- constructor(){super("mezgeb_local_v2");this.version(1).stores({documents:"key"});}
+ syncStates!: Table<SyncMeta,string>;
+ recovery!: Table<RecoveryCopy,string>;
+ constructor(){
+   super("mezgeb_local_v2");
+   this.version(1).stores({documents:"key"});
+   this.version(2).stores({documents:"key",syncStates:"key",recovery:"id,at,accountId"});
+ }
 }
 let database: MezgebLocalDB | null = null;
 function db(){if(!database)database=new MezgebLocalDB();return database;}
@@ -57,6 +96,55 @@ export async function loadDocument():Promise<Document>{
 export async function saveDocument(value:Document):Promise<void>{
   const safe=documentSchema.parse(value);
   await db().documents.put({key:"main",value:safe});
+}
+export async function readSyncMeta():Promise<SyncMeta|null>{
+ const value=await db().syncStates.get("active");
+ if(!value)return null;
+ const result=syncMetaSchema.safeParse(value);
+ if(!result.success)throw Error("Saved sync metadata is invalid; automatic sync has been stopped to protect your data.");
+ return result.data;
+}
+export async function storeSyncMeta(value:SyncMeta):Promise<void>{
+ await db().syncStates.put(syncMetaSchema.parse(value));
+}
+/**
+ * Commit a downloaded cloud ledger and the matching cloud checkpoint atomically.
+ * Without this transaction, closing the app between those two writes can make
+ * a later sync misinterpret unsaved cloud records as local deletions.
+ */
+export async function commitCloudSnapshot(document:Document, checkpoint:SyncMeta, previous?:Document, reason="Before cloud restore"):Promise<void>{
+ const current=documentSchema.parse(document);
+ const state=syncMetaSchema.parse(checkpoint);
+ const existing=previous?documentSchema.parse(previous):null;
+ const database=db();
+ await database.transaction("rw",database.documents,database.syncStates,database.recovery,async()=>{
+  if(existing){
+   await database.recovery.put({
+    id:globalThis.crypto.randomUUID(),at:Date.now(),reason:reason.slice(0,180),
+    accountId:state.accountId,document:existing
+   });
+  }
+  await database.documents.put({key:"main",value:current});
+  await database.syncStates.put(state);
+  const history=await database.recovery.where("accountId").equals(state.accountId).toArray();
+  history.sort((a,b)=>b.at-a.at);
+  if(history.length>20)await database.recovery.bulkDelete(history.slice(20).map(x=>x.id));
+ });
+}
+export async function disconnectSyncAccount():Promise<void>{
+ await db().syncStates.delete("active");
+}
+export async function createRecoveryCopy(document:Document, accountId:string, reason:string):Promise<void>{
+ const record:RecoveryCopy={id:globalThis.crypto.randomUUID(),at:Date.now(),reason:reason.slice(0,180),
+   accountId,document:documentSchema.parse(document)};
+ await db().recovery.put(record);
+ // Keep the latest 20 recoveries per account, never overwrite the only existing copy.
+ const all=(await db().recovery.where("accountId").equals(accountId).toArray()).sort((a,b)=>b.at-a.at);
+ const older=all.slice(20).map(x=>x.id);
+ if(older.length)await db().recovery.bulkDelete(older);
+}
+export async function readRecoveryCopies(accountId:string):Promise<RecoveryCopy[]>{
+ return (await db().recovery.where("accountId").equals(accountId).toArray()).sort((a,b)=>b.at-a.at);
 }
 export function id(){return globalThis.crypto.randomUUID();}
 export function toCents(value:string|number):number{
