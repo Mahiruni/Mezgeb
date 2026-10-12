@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { LedgerProvider } from "./providers";
 import { ServiceWorker } from "@/components/service-worker";
+import { SyncProvider } from "./sync-provider";
 
 export const metadata: Metadata = {
   title: "Mezgeb መዝገብ — Your daily business ledger",
@@ -13,5 +14,5 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#001F38" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body><LedgerProvider><ServiceWorker />{children}</LedgerProvider></body></html>;
+  return <html lang="en"><body><LedgerProvider><SyncProvider><ServiceWorker />{children}</SyncProvider></LedgerProvider></body></html>;
 }
