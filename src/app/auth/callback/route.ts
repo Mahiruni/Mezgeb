@@ -1,15 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-/**
- * Exchange one-time PKCE code for a server-verified cookie session. Restrict
- * redirects to owned paths to prevent auth callback open redirects.
- */
+/** PKCE callback with a fixed allowlist of internal destinations. */
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
-  const nextParam = request.nextUrl.searchParams.get("next");
-  const next = nextParam?.startsWith("/") && !nextParam.startsWith("//")
-    ? nextParam : "/";
+  const requestedNext = request.nextUrl.searchParams.get("next");
+  const next = requestedNext === "/auth/update-password"
+    ? "/auth/update-password" : "/";
   const supabase = await createClient();
   if (!supabase) {
     return NextResponse.redirect(new URL("/auth?error=not-configured", request.url));
