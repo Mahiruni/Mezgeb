@@ -6,6 +6,11 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Build;
+import android.graphics.Insets;
+import android.view.WindowInsets;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.webkit.CookieManager;
 import android.webkit.SslErrorHandler;
 import android.net.http.SslError;
@@ -31,7 +36,38 @@ public final class MainActivity extends Activity {
         WebView.setWebContentsDebuggingEnabled(false);
         webView = new WebView(this);
         webView.setBackgroundColor(Color.rgb(6, 29, 50));
-        setContentView(webView);
+        FrameLayout viewport = new FrameLayout(this);
+        viewport.setBackgroundColor(Color.rgb(6, 29, 50));
+        viewport.addView(webView, new FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
+        // Android 15+ enforces edge-to-edge for apps targeting API 35.
+        // Keep the status bar clock, battery, notification icons, camera cutout,
+        // gesture bar and three-button navigation clear of web content.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            getWindow().setDecorFitsSystemWindows(false);
+            viewport.setOnApplyWindowInsetsListener((view, insets) -> {
+                Insets bars = insets.getInsets(
+                    WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                // An edge-to-edge window is not automatically resized for IME.
+                // Apply keyboard bottom inset as well so focused inputs remain visible.
+                Insets keyboard = insets.getInsets(WindowInsets.Type.ime());
+                int safeBottom = Math.max(bars.bottom, keyboard.bottom);
+                FrameLayout.LayoutParams params =
+                    (FrameLayout.LayoutParams) webView.getLayoutParams();
+                if (params.leftMargin != bars.left || params.topMargin != bars.top
+                        || params.rightMargin != bars.right || params.bottomMargin != safeBottom) {
+                    params.setMargins(bars.left, bars.top, bars.right, safeBottom);
+                    webView.setLayoutParams(params);
+                }
+                return insets;
+            });
+        }
+        // Android 8-10 retain their normal non-fullscreen window behavior.
+        setContentView(viewport);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            viewport.requestApplyInsets();
+        }
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true); // Required for the existing React ledger.
         settings.setDomStorageEnabled(true); // IndexedDB/Service Worker keep device records.

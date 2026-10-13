@@ -10,6 +10,10 @@ CI (GitHub Actions, **Mezgeb Android preview APK**) uploads an installable **deb
 
 Install `android/app/build/outputs/apk/debug/app-debug.apk` on a test Android device. It is debug-signed by the build agent, **not** a production signed or Play Store release. Rebuilding can change the debug key; uninstalling/reinstalling destroys this app's local ledger unless a verified cloud copy/backup exists. Do not uninstall or clear app data before export and recovery verification.
 
+## Android status and navigation safety
+
+Android 11+ uses WindowInsets for the status bar (clock, signal, notifications and camera cutouts), bottom gesture/navigation area, landscape sides, and keyboard. Android 8-10 use the platform's default non-fullscreen layout. The website also uses viewport safe-area CSS for standalone PWAs and iPhones. Keep this contract across future changes: do not draw interactive content beneath system controls.
+
 ## Release gates before real customers
 
 - Confirm offline reopening, persisted IndexedDB, account email confirmation, signed-in sync, conflict recovery, and native back/navigation on two physical phones.

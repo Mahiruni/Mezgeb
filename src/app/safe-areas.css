@@ -1,0 +1,135 @@
+/*
+ * System UI safe-area contract:
+ * - Android native WebView is physically inset by WindowInsets; CSS env() is 0
+ *   inside its already-safe window and MUST NOT fake a fixed status bar height.
+ * - Browser-installed PWAs and iOS standalone use viewport-fit=cover and
+ *   env(safe-area-inset-*) for cutouts, status bars, home indicators, and landscape.
+ * - Never use hard-coded notch offsets; device dimensions vary.
+ */
+:root {
+  --mezgeb-safe-top: env(safe-area-inset-top, 0px);
+  --mezgeb-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --mezgeb-safe-left: env(safe-area-inset-left, 0px);
+  --mezgeb-safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* All top-level screens must start below the system clock and camera cutout. */
+.topbar {
+  box-sizing: border-box;
+  height: calc(82px + var(--mezgeb-safe-top));
+  padding-top: var(--mezgeb-safe-top);
+  padding-left: calc(clamp(20px, 4.1vw, 62px) + var(--mezgeb-safe-left));
+  padding-right: calc(clamp(20px, 4.1vw, 62px) + var(--mezgeb-safe-right));
+}
+.sidebar {
+  padding-top: calc(26px + var(--mezgeb-safe-top));
+  padding-bottom: calc(22px + var(--mezgeb-safe-bottom));
+  padding-left: calc(16px + var(--mezgeb-safe-left));
+}
+.content {
+  padding-left: calc(clamp(18px, 4.1vw, 62px) + var(--mezgeb-safe-left));
+  padding-right: calc(clamp(18px, 4.1vw, 62px) + var(--mezgeb-safe-right));
+  padding-bottom: calc(74px + var(--mezgeb-safe-bottom));
+}
+.intro-page {
+  padding-top: calc(28px + var(--mezgeb-safe-top));
+  padding-bottom: calc(28px + var(--mezgeb-safe-bottom));
+  padding-left: calc(clamp(22px, 5vw, 80px) + var(--mezgeb-safe-left));
+  padding-right: calc(clamp(22px, 5vw, 80px) + var(--mezgeb-safe-right));
+}
+.auth-shell {
+  padding-top: calc(25px + var(--mezgeb-safe-top));
+  padding-bottom: calc(25px + var(--mezgeb-safe-bottom));
+  padding-left: calc(25px + var(--mezgeb-safe-left));
+  padding-right: calc(25px + var(--mezgeb-safe-right));
+}
+.onboard-brand {
+  box-sizing: border-box;
+  height: calc(85px + var(--mezgeb-safe-top));
+  padding-top: var(--mezgeb-safe-top);
+  padding-left: calc(24px + var(--mezgeb-safe-left));
+  padding-right: calc(24px + var(--mezgeb-safe-right));
+}
+.loading-shell,
+.fatal {
+  padding-top: var(--mezgeb-safe-top);
+  padding-bottom: var(--mezgeb-safe-bottom);
+}
+
+/* Bottom links and the floating new-transaction action stay above gestures. */
+.mobile-nav {
+  box-sizing: border-box;
+  height: calc(66px + var(--mezgeb-safe-bottom));
+  padding-bottom: var(--mezgeb-safe-bottom);
+  padding-left: calc(7px + var(--mezgeb-safe-left));
+  padding-right: calc(7px + var(--mezgeb-safe-right));
+}
+.mobile-fab {
+  right: calc(17px + var(--mezgeb-safe-right));
+  bottom: calc(84px + var(--mezgeb-safe-bottom));
+}
+.modal-backdrop {
+  box-sizing: border-box;
+  padding-top: var(--mezgeb-safe-top);
+  padding-bottom: var(--mezgeb-safe-bottom);
+  padding-left: var(--mezgeb-safe-left);
+  padding-right: var(--mezgeb-safe-right);
+}
+.modal {
+  max-height: calc(100dvh - var(--mezgeb-safe-top) - var(--mezgeb-safe-bottom));
+}
+
+@media (min-width: 900px) {
+  .auth-shell {
+    padding-top: calc(22px + var(--mezgeb-safe-top));
+    padding-bottom: calc(22px + var(--mezgeb-safe-bottom));
+    padding-left: calc(4vw + var(--mezgeb-safe-left));
+    padding-right: calc(4vw + var(--mezgeb-safe-right));
+  }
+}
+@media (max-width: 900px) {
+  .topbar {
+    padding-left: calc(23px + var(--mezgeb-safe-left));
+    padding-right: calc(23px + var(--mezgeb-safe-right));
+  }
+  .content {
+    padding-left: calc(23px + var(--mezgeb-safe-left));
+    padding-right: calc(23px + var(--mezgeb-safe-right));
+    padding-bottom: calc(94px + var(--mezgeb-safe-bottom));
+  }
+  .onboard-grid {
+    margin-left: max(15px, var(--mezgeb-safe-left));
+    margin-right: max(15px, var(--mezgeb-safe-right));
+  }
+}
+@media (max-width: 580px) {
+  .topbar {
+    height: calc(66px + var(--mezgeb-safe-top));
+    padding-top: var(--mezgeb-safe-top);
+    padding-left: calc(15px + var(--mezgeb-safe-left));
+    padding-right: calc(15px + var(--mezgeb-safe-right));
+  }
+  .content {
+    padding-left: calc(15px + var(--mezgeb-safe-left));
+    padding-right: calc(15px + var(--mezgeb-safe-right));
+    padding-bottom: calc(120px + var(--mezgeb-safe-bottom));
+  }
+  .intro-page {
+    padding-top: calc(19px + var(--mezgeb-safe-top));
+    padding-bottom: calc(25px + var(--mezgeb-safe-bottom));
+    padding-left: calc(20px + var(--mezgeb-safe-left));
+    padding-right: calc(20px + var(--mezgeb-safe-right));
+  }
+  .auth-shell {
+    padding-top: calc(16px + var(--mezgeb-safe-top));
+    padding-bottom: calc(16px + var(--mezgeb-safe-bottom));
+    padding-left: calc(16px + var(--mezgeb-safe-left));
+    padding-right: calc(16px + var(--mezgeb-safe-right));
+  }
+  .onboard-brand {
+    height: calc(67px + var(--mezgeb-safe-top));
+  }
+  .mobile-fab {
+    bottom: calc(88px + var(--mezgeb-safe-bottom));
+  }
+}
