@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "./safe-areas.css";
 import { LedgerProvider } from "./providers";
 import { ServiceWorker } from "@/components/service-worker";
 import { SyncProvider } from "./sync-provider";
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   robots: { index: false, follow: false }
 };
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#001F38" };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: "#092A43" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <html lang="en"><body><LedgerProvider><SyncProvider><ServiceWorker />{children}</SyncProvider></LedgerProvider></body></html>;
