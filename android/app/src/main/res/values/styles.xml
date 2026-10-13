@@ -3,8 +3,8 @@
     <style name="Theme.Mezgeb" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <item name="android:windowActionModeOverlay">true</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:statusBarColor">#061D32</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:statusBarColor">#DAE3EC</item>
         <item name="android:navigationBarColor">#061D32</item>
         <item name="android:windowBackground">#061D32</item>
     </style>

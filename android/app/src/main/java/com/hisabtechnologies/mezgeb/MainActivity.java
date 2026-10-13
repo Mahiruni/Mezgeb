@@ -9,6 +9,9 @@ import android.os.Bundle;
 import android.os.Build;
 import android.graphics.Insets;
 import android.view.WindowInsets;
+import android.view.View;
+import android.view.Gravity;
+import android.view.WindowInsetsController;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.webkit.CookieManager;
@@ -26,18 +29,37 @@ public final class MainActivity extends Activity {
     private static final String APP_HOST = "mezgeb-omega.vercel.app";
     private static final String APP_URL = "https://" + APP_HOST + "/";
     private static final int PICK_FILE_REQUEST = 71;
+    // Dark Android clock, battery and connectivity indicators over pale slate.
+    private static final int STATUS_BAR_BACKGROUND = Color.rgb(218, 227, 236);
     private WebView webView;
     private ValueCallback<Uri[]> pendingFileSelection;
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setStatusBarColor(Color.rgb(6, 29, 50));
+        getWindow().setStatusBarColor(STATUS_BAR_BACKGROUND);
         getWindow().setNavigationBarColor(Color.rgb(6, 29, 50));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowInsetsController controller = getWindow().getInsetsController();
+            if (controller != null) {
+                controller.setSystemBarsAppearance(
+                    WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                    WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
+            }
+        } else {
+            View decor = getWindow().getDecorView();
+            decor.setSystemUiVisibility(decor.getSystemUiVisibility() | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
         WebView.setWebContentsDebuggingEnabled(false);
         webView = new WebView(this);
         webView.setBackgroundColor(Color.rgb(6, 29, 50));
         FrameLayout viewport = new FrameLayout(this);
         viewport.setBackgroundColor(Color.rgb(6, 29, 50));
+        // On Android 15+, statusBarColor can be transparent under enforced
+        // edge-to-edge. Paint the actual inset behind the OS indicators.
+        View statusBarBackdrop = new View(this);
+        statusBarBackdrop.setBackgroundColor(STATUS_BAR_BACKGROUND);
+        viewport.addView(statusBarBackdrop, new FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, 0, Gravity.TOP));
         viewport.addView(webView, new FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
@@ -53,6 +75,12 @@ public final class MainActivity extends Activity {
                 // Apply keyboard bottom inset as well so focused inputs remain visible.
                 Insets keyboard = insets.getInsets(WindowInsets.Type.ime());
                 int safeBottom = Math.max(bars.bottom, keyboard.bottom);
+                FrameLayout.LayoutParams statusParams =
+                    (FrameLayout.LayoutParams) statusBarBackdrop.getLayoutParams();
+                if (statusParams.height != bars.top) {
+                    statusParams.height = bars.top;
+                    statusBarBackdrop.setLayoutParams(statusParams);
+                }
                 FrameLayout.LayoutParams params =
                     (FrameLayout.LayoutParams) webView.getLayoutParams();
                 if (params.leftMargin != bars.left || params.topMargin != bars.top
