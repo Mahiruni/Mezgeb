@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Cloud, CloudOff, CloudUpload, CloudDownload, RefreshCw, ShieldCheck, LogOut, AlertTriangle, WifiOff, History, Link2Off, CheckCircle2 } from "lucide-react";
 import { useLedger } from "@/app/providers";
@@ -32,7 +32,7 @@ export function CloudBackup(){
  const [busy,setBusy]=useState(false);
  const [restoreShow,setRestoreShow]=useState(false);
  const [notice,setNotice]=useState("");
- useEffect(()=>{if(sync.accountId&&!sync.linkedAccountId)void sync.refresh();},[sync.accountId,sync.linkedAccountId]); // load first cloud snapshot
+ // Discovery is handled by SyncProvider auto-pair to avoid racing first-time local checkpoints.
  const askConnect=async(choice:"device"|"cloud")=>{
   if(!sync.accountId||busy)return;
   if(choice==="cloud"&&!sync.cloud){setNotice("No cloud copy to restore. Upload this device instead.");return;}
