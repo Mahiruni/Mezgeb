@@ -49,9 +49,13 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
   }, [doc, ready]);
 
   const update = useCallback((change: (previous: Document) => Document) => {
+    // Do not keep accumulating edits the browser cannot safely persist.
+    // The current in-memory snapshot remains available for JSON export.
+    if(storageConflict.current){setError(storageConflict.current);return;}
     setDoc(previous => ({ ...change(previous), updatedAt: Date.now() }));
   }, []);
   const replace = useCallback((next: Document, alreadyStored=false) => {
+    if(storageConflict.current)throw Error(storageConflict.current);
     // SyncProvider calls replace only AFTER an atomic IndexedDB commit.
     // Advance the expected disk baseline to avoid a false second-tab alert.
     if(alreadyStored)persisted.current=next;
