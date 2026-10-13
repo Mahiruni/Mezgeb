@@ -349,9 +349,9 @@ export function SyncProvider({children}:{children:React.ReactNode}){
       revision:resolved.revision,base:resolvedForDevice,lastSyncedAt:Date.now()};
     if(choice==="cloud"&&!isSameLedger(local,resolvedForDevice)){
       await commitCloudSnapshot(resolvedForDevice,next,docRef.current,
-        "Before replacing local records during conflict resolution");
+        "Before replacing local records during conflict resolution",true);
       if(accountRef.current===user&&isSameLedger(docRef.current,local))replace(resolvedForDevice,true);
-    }else await storeSyncMeta(next);
+    }else await storeSyncMeta(next,true); // Only a reviewed Keep Cloud/Device action releases a recovery hold.
     metaRef.current=next;setMeta(next);setCloud(resolved);
     setConflictList([]);setStatus("synced");setLastSyncedAt(next.lastSyncedAt);
     setRecovery(await readRecoveryCopies(user));setMessage("Conflict resolved. Both versions were retained as recovery copies.");
