@@ -285,7 +285,12 @@ export function SyncProvider({children}:{children:React.ReactNode}){
       await storeSyncMeta(next);metaRef.current=next;setMeta(next);setCloud(uploaded);
     }
     // A manual reconnect intentionally turns back on sync after an opt-out.
-    if(!automatic){try{window.localStorage.removeItem("mezgeb.sync.optout."+user);}catch{}}
+    if(!automatic){
+      try{
+        window.localStorage.removeItem("mezgeb.sync.optout."+user);
+        window.localStorage.removeItem("mezgeb.sync.previousAccount");
+      }catch{}
+    }
     setLinkedAccountId(user);setConflictList([]);setLastSyncedAt(Date.now());
     setRecovery(await readRecoveryCopies(user));setStatus("synced");
     if(!isSameLedger(docRef.current,local))setTick(n=>n+1);
@@ -300,6 +305,12 @@ export function SyncProvider({children}:{children:React.ReactNode}){
    if(!activeConfig||!ready||!metaLoaded||!accountId||!isVerified||meta||!isOnline())return;
    try{
      if(window.localStorage.getItem("mezgeb.sync.optout."+accountId)==="1")return;
+     const previous=window.localStorage.getItem("mezgeb.sync.previousAccount");
+     if(previous&&previous!==accountId){
+       setStatus("not-linked");
+       setMessage("This device previously held another account's ledger. Review the data before manually connecting this account; automatic uploading is blocked.");
+       return;
+     }
    }catch{}
    const key=JSON.stringify([accountId,doc.business.name,doc.business.tin,
      doc.business.phone,doc.entries.length,doc.customers.length,doc.nextDraft]);
@@ -354,7 +365,10 @@ export function SyncProvider({children}:{children:React.ReactNode}){
   // Recovery history belongs to the account previously paired to this device,
   // not any new identity that happens to have signed in afterward.
   await createRecoveryCopy(await flush(),linked.accountId,"Before unlinking cloud sync");
-  try{window.localStorage.setItem("mezgeb.sync.optout."+linked.accountId,"1");}catch{}
+  try{
+    window.localStorage.setItem("mezgeb.sync.optout."+linked.accountId,"1");
+    window.localStorage.setItem("mezgeb.sync.previousAccount",linked.accountId);
+  }catch{}
   await disconnectSyncAccount();
   setMeta(null);metaRef.current=null;setLinkedAccountId(null);setCloud(null);
   setStatus("not-linked");setMessage("Automatic synchronization disabled. Local financial records remain on this device.");
