@@ -33,7 +33,7 @@ export function Shell({ children, onNew }: { children: React.ReactNode; onNew: (
   <aside className={"sidebar"+(menu?" expanded":"")}>
    <div className="brand-wrap"><Link href="/" className="brand" onClick={()=>setMenu(false)}><span className="brand-symbol"><ClipboardList size={23}/></span><span>Mezgeb <small>መዝገብ</small></span></Link><button className="icon-btn sidebar-close" onClick={()=>setMenu(false)} aria-label="Close menu"><X size={20}/></button></div>
    <div className="nav-label">WORKSPACE</div><nav className="side-nav" aria-label="Main navigation">{links}</nav>
-   <div className="sidebar-bottom"><div className="sidebar-note"><ShieldAlert size={19}/><div><b>{syncText}</b><span>Data always saves to this device. Cloud sync requires verified sign-in and explicit pairing.</span></div></div><Link href="/plans" className="plan-link">Mezgeb plans <span>↗</span></Link><div className="built">Built for Ethiopian businesses</div></div>
+   <div className="sidebar-bottom"><div className="sidebar-note"><ShieldAlert size={19}/><div><b>{syncText}</b><span>Financial records save on this device first. After verified sign-in, cloud sync connects automatically when safe; different existing ledgers require review.</span></div></div><Link href="/plans" className="plan-link">Mezgeb plans <span>↗</span></Link><div className="built">Built for Ethiopian businesses</div></div>
   </aside>
   <div className="app-main">
    <header className="topbar">
