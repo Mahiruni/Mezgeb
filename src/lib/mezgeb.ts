@@ -120,13 +120,16 @@ export async function readSyncMeta():Promise<SyncMeta|null>{
  if(!result.success)throw Error("Saved sync metadata is invalid; automatic sync has been stopped to protect your data.");
  return result.data;
 }
-export async function storeSyncMeta(value:SyncMeta):Promise<void>{
+export async function storeSyncMeta(value:SyncMeta, allowReviewResolution=false):Promise<void>{
  const next=syncMetaSchema.parse(value);
  const database=db();
  await database.transaction("rw",database.syncStates,async()=>{
   const existing=await database.syncStates.get("active");
   if(existing&&(existing.accountId!==next.accountId||existing.revision>next.revision)){
    throw new Error("Another tab changed the cloud sync checkpoint. Reload to reconcile safely.");
+  }
+  if(existing?.holdForReview&&!next.holdForReview&&!allowReviewResolution){
+   throw new Error("A recovery review is active in another tab. The review hold cannot be cleared by background synchronization.");
   }
   await database.syncStates.put(next);
  });
@@ -136,7 +139,7 @@ export async function storeSyncMeta(value:SyncMeta):Promise<void>{
  * Without this transaction, closing the app between those two writes can make
  * a later sync misinterpret unsaved cloud records as local deletions.
  */
-export async function commitCloudSnapshot(document:Document, checkpoint:SyncMeta, previous?:Document, reason="Before cloud restore"):Promise<void>{
+export async function commitCloudSnapshot(document:Document, checkpoint:SyncMeta, previous?:Document, reason="Before cloud restore", allowReviewResolution=false):Promise<void>{
  const current=documentSchema.parse(document);
  const state=syncMetaSchema.parse(checkpoint);
  const existing=previous?documentSchema.parse(previous):null;
@@ -150,6 +153,9 @@ export async function commitCloudSnapshot(document:Document, checkpoint:SyncMeta
   if(priorCheckpoint&&(priorCheckpoint.accountId!==state.accountId||
      priorCheckpoint.revision>state.revision)){
    throw new Error("Another tab advanced the cloud checkpoint. No records were replaced.");
+  }
+  if(priorCheckpoint?.holdForReview&&!state.holdForReview&&!allowReviewResolution){
+   throw new Error("Another tab has paused cloud sync for recovery review. No records were replaced.");
   }
   if(existing){
    await database.recovery.put({
