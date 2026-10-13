@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Activity, ArrowDownLeft, ArrowRight, ArrowUpRight, BadgeCheck, BookOpenText, CalendarDays, ChartNoAxesCombined, Check, ChevronLeft, ChevronRight, CircleAlert, CreditCard, Download, FileText, Filter, Landmark, LockKeyhole, Plus, Printer, Search, Settings2, ShieldCheck, Smartphone, Trash2, Upload, Users, Wallet, X } from "lucide-react";
 import { useLedger } from "./providers";
 import { Shell } from "@/components/shell";
+import { WelcomeIntro } from "@/components/welcome-intro";
 import { CloudBackup } from "@/components/cloud-backup";
 import { useSync } from "./sync-provider";
 import { creditBalance, csv, documentSchema, expenseCategories, id, initialDocument, label, localeOptions, localDate, money, monthOf, outstanding, parseLegacy, payments, saleCategories, todayISO, toCents, totals, type CopyKey, type Customer, type Document, type Entry, type EntryType } from "@/lib/mezgeb";
@@ -173,11 +174,14 @@ export function Workspace({section}:{section:string}){
  const [month,setMonth]=useState(monthOf(todayISO()));
  const [search,setSearch]=useState("");
  const [filter,setFilter]=useState<"all"|EntryType>("all");
+ const [introSeen,setIntroSeen]=useState<boolean|null>(null);
+ useEffect(()=>{try{setIntroSeen(window.localStorage.getItem("mezgeb_intro_seen")==="1");}catch{setIntroSeen(false);}},[]);
  const summary=useMemo(()=>totals(doc.entries,month,doc.business.vatRegistered),[doc.entries,month,doc.business.vatRegistered]);
  const current=useMemo(()=>doc.entries.filter(e=>monthOf(e.date)===month&& (filter==="all"||e.type===filter)&&([e.note,e.category,e.pay].join(" ").toLowerCase().includes(search.toLowerCase()))).sort((a,b)=>b.createdAt-a.createdAt),[doc.entries,month,filter,search]);
  const recent=useMemo(()=>[...doc.entries].sort((a,b)=>b.createdAt-a.createdAt).slice(0,6),[doc.entries]);
  if(error&&!ready)return <div className="fatal"><h1>Could not open your local data</h1><p>{error}</p><p>Do not clear browser storage. Your existing data has not been overwritten.</p></div>;
- if(!ready)return <div className="loading-shell"><span className="brand-symbol"><BookOpenText/></span><h1>Mezgeb መዝገብ</h1><p>Opening your ledger…</p></div>;
+ if(!ready||introSeen===null)return <div className="loading-shell"><span className="brand-symbol"><BookOpenText/></span><h1>Mezgeb መዝገብ</h1><p>Opening your ledger…</p></div>;
+ if(!doc.business.name&&section==="home"&&!introSeen)return <WelcomeIntro onStart={()=>{try{window.localStorage.setItem("mezgeb_intro_seen","1");}catch{}setIntroSeen(true);}}/>;
  if(!doc.business.name&&section!=="settings")return <Onboard/>;
  const l=(key:CopyKey)=>label(doc.locale,key);
  return <Shell onNew={()=>setNewType("sale")}>

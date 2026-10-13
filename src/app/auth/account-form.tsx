@@ -24,7 +24,7 @@ export function AccountForm({ enabled }:{ enabled: boolean }) {
     try{
       const client=createClient();
       if(mode==="signin"){
-        const {data,error:authError}=await client.auth.signInWithPassword({email:email.trim(),password});
+        const {data,error:authError}=await client.auth.signInWithPassword({email:email.trim().toLowerCase().toLowerCase(),password});
         if(authError)throw authError;
         // A session is not proof of email confirmation if the Auth project
         // is misconfigured; don't allow the UI to imply a verified identity.
@@ -37,7 +37,7 @@ export function AccountForm({ enabled }:{ enabled: boolean }) {
       }else if(mode==="signup"){
         if(password.length<12)throw Error("Use at least 12 characters for your password.");
         const {data,error:authError}=await client.auth.signUp({
-          email:email.trim(),password,
+          email:email.trim().toLowerCase(),password,
           options:{emailRedirectTo:window.location.origin+"/auth/callback"}
         });
         if(authError)throw authError;
@@ -67,7 +67,7 @@ export function AccountForm({ enabled }:{ enabled: boolean }) {
     setBusy(true);setError("");setMessage("");
     try{
       const {error:resendError}=await createClient().auth.resend({
-        type:"signup",email:email.trim(),
+        type:"signup",email:email.trim().toLowerCase(),
         options:{emailRedirectTo:window.location.origin+"/auth/callback"}
       });
       if(resendError)throw resendError;
@@ -76,6 +76,7 @@ export function AccountForm({ enabled }:{ enabled: boolean }) {
     finally{setBusy(false);}
   };
   return <main className="auth-shell">
+    <aside className="auth-visual" aria-hidden="true"><div className="auth-visual-mark">መ</div><div className="auth-visual-copy"><span className="eyebrow light">YOUR BUSINESS, BEAUTIFULLY ORGANIZED</span><h2>Clarity for every birr.</h2><p>Sales, expenses, Dube, and receipts in one considered workspace.</p><div className="auth-visual-foot"><ShieldCheck size={17}/> Offline-first. Secure by design.</div></div></aside>
     <div className="auth-brand"><span className="brand-symbol"><BookOpenText size={24}/></span><span>Mezgeb <small>መዝገብ</small></span></div>
     <section className="auth-panel">
       <Link className="auth-back" href="/"><ArrowLeft size={17}/> Back to Mezgeb</Link>
@@ -87,7 +88,7 @@ export function AccountForm({ enabled }:{ enabled: boolean }) {
       {linkError&&<p className="form-error" role="alert">That confirmation link could not be verified. Request another link.</p>}
       {query.get("password")==="updated"&&<p className="notice" role="status">Your password was updated. Sign in using the new password.</p>}
       <form onSubmit={submit} className="auth-form">
-        <label>Email address<input type="email" autoComplete="email" required disabled={!enabled||busy} maxLength={250} placeholder="you@business.com" value={email} onChange={e=>setEmail(e.target.value)}/></label>
+        <label>Email address<input type="email" inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="email" required disabled={!enabled||busy} maxLength={250} placeholder="you@business.com" value={email} onChange={e=>setEmail(e.target.value)}/></label>
         {mode!=="reset"&&<label>Password<div className="password-input"><input type={visible?"text":"password"} autoComplete={mode==="signup"?"new-password":"current-password"} minLength={mode==="signup"?12:1} required disabled={!enabled||busy} value={password} onChange={e=>setPassword(e.target.value)}/><button type="button" aria-label={visible?"Hide password":"Show password"} onClick={()=>setVisible(v=>!v)}>{visible?<EyeOff size={17}/>:<Eye size={17}/>}</button></div></label>}
         {error&&<p className="form-error" role="alert">{error}</p>}
         {message&&<p className="notice" role="status">{message}</p>}
