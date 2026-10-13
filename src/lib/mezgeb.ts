@@ -107,7 +107,7 @@ export async function saveDocumentIfUnchanged(value:Document, expected:Document)
  const database=db();
  await database.transaction("rw",database.documents,async()=>{
   const current=await database.documents.get("main");
-  if(!current || JSON.stringify(current.value)!==JSON.stringify(baseline)){
+  if(current && JSON.stringify(current.value)!==JSON.stringify(baseline)){
    throw new Error("Another Mezgeb tab updated this device's records. Your edits were NOT overwritten. Export a backup of this tab, then reload and review before continuing.");
   }
   await database.documents.put({key:"main",value:safe});
