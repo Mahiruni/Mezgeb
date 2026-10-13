@@ -48,13 +48,13 @@ describe("durable local sync checkpoint and recovery",()=>{
 
 describe("persistent recovery review gate",()=>{
  it("remembers a review hold across IndexedDB reads",async()=>{
-  const before=await readSyncMeta();
   const paused={...checkpoint(documentWith(3000),10),holdForReview:true as const};
   await storeSyncMeta(paused);
   const restored=await readSyncMeta();
   expect(restored?.holdForReview).toBe(true);
   expect(restored?.revision).toBe(10);
-  if(before)await storeSyncMeta(before);
+  await expect(storeSyncMeta({...paused,holdForReview:false})).rejects.toThrow(/review hold/);
+  await storeSyncMeta({...paused,holdForReview:false},true);
  });
 });
 
@@ -85,13 +85,14 @@ describe("Phase 3 — crash-safe local and multi-tab writes",()=>{
   expect((await loadDocument()).entries[0].cents).toBe(7000);
   expect((await readSyncMeta())?.holdForReview).toBe(true);
   expect((await readRecoveryCopies(id))[0].document.entries[0].cents).toBe(6500);
+  await expect(storeSyncMeta(checkpoint(recovered,41))).rejects.toThrow(/review hold/);
  });
  it("rejects an atomic cloud replacement if a second tab edited IndexedDB",async()=>{
   const original=documentWith(9000);
   const otherTab=documentWith(9900);
   const fromCloud=documentWith(12300);
   await saveDocument(original);
-  await storeSyncMeta(checkpoint(original,42));
+  await storeSyncMeta(checkpoint(original,42),true);
   await saveDocument(otherTab);
   await expect(commitCloudSnapshot(fromCloud,checkpoint(fromCloud,43),original,
     "Attempted stale restore")).rejects.toThrow(/Another tab/);
