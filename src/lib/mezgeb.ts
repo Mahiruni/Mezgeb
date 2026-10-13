@@ -97,6 +97,22 @@ export async function saveDocument(value:Document):Promise<void>{
   const safe=documentSchema.parse(value);
   await db().documents.put({key:"main",value:safe});
 }
+/**
+ * Never allow a stale browser tab to overwrite another tab's persisted ledger.
+ * The comparison and replacement are performed in one IndexedDB transaction.
+ */
+export async function saveDocumentIfUnchanged(value:Document, expected:Document):Promise<void>{
+ const safe=documentSchema.parse(value);
+ const baseline=documentSchema.parse(expected);
+ const database=db();
+ await database.transaction("rw",database.documents,async()=>{
+  const current=await database.documents.get("main");
+  if(current && JSON.stringify(current.value)!==JSON.stringify(baseline)){
+   throw new Error("Another Mezgeb tab updated this device's records. Your edits were NOT overwritten. Export a backup of this tab, then reload and review before continuing.");
+  }
+  await database.documents.put({key:"main",value:safe});
+ });
+}
 export async function readSyncMeta():Promise<SyncMeta|null>{
  const value=await db().syncStates.get("active");
  if(!value)return null;
@@ -104,20 +120,43 @@ export async function readSyncMeta():Promise<SyncMeta|null>{
  if(!result.success)throw Error("Saved sync metadata is invalid; automatic sync has been stopped to protect your data.");
  return result.data;
 }
-export async function storeSyncMeta(value:SyncMeta):Promise<void>{
- await db().syncStates.put(syncMetaSchema.parse(value));
+export async function storeSyncMeta(value:SyncMeta, allowReviewResolution=false):Promise<void>{
+ const next=syncMetaSchema.parse(value);
+ const database=db();
+ await database.transaction("rw",database.syncStates,async()=>{
+  const existing=await database.syncStates.get("active");
+  if(existing&&(existing.accountId!==next.accountId||existing.revision>next.revision)){
+   throw new Error("Another tab changed the cloud sync checkpoint. Reload to reconcile safely.");
+  }
+  if(existing?.holdForReview&&!next.holdForReview&&!allowReviewResolution){
+   throw new Error("A recovery review is active in another tab. The review hold cannot be cleared by background synchronization.");
+  }
+  await database.syncStates.put(next);
+ });
 }
 /**
  * Commit a downloaded cloud ledger and the matching cloud checkpoint atomically.
  * Without this transaction, closing the app between those two writes can make
  * a later sync misinterpret unsaved cloud records as local deletions.
  */
-export async function commitCloudSnapshot(document:Document, checkpoint:SyncMeta, previous?:Document, reason="Before cloud restore"):Promise<void>{
+export async function commitCloudSnapshot(document:Document, checkpoint:SyncMeta, previous?:Document, reason="Before cloud restore", allowReviewResolution=false):Promise<void>{
  const current=documentSchema.parse(document);
  const state=syncMetaSchema.parse(checkpoint);
  const existing=previous?documentSchema.parse(previous):null;
  const database=db();
  await database.transaction("rw",database.documents,database.syncStates,database.recovery,async()=>{
+  const stored=await database.documents.get("main");
+  if(existing&&(!stored||JSON.stringify(stored.value)!==JSON.stringify(existing))){
+   throw new Error("Another tab changed this device's ledger during recovery or sync. No records were replaced. Export this tab, then reload to reconcile.");
+  }
+  const priorCheckpoint=await database.syncStates.get("active");
+  if(priorCheckpoint&&(priorCheckpoint.accountId!==state.accountId||
+     priorCheckpoint.revision>state.revision)){
+   throw new Error("Another tab advanced the cloud checkpoint. No records were replaced.");
+  }
+  if(priorCheckpoint?.holdForReview&&!state.holdForReview&&!allowReviewResolution){
+   throw new Error("Another tab has paused cloud sync for recovery review. No records were replaced.");
+  }
   if(existing){
    await database.recovery.put({
     id:globalThis.crypto.randomUUID(),at:Date.now(),reason:reason.slice(0,180),
