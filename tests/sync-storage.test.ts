@@ -2,7 +2,7 @@ import "fake-indexeddb/auto";
 import { describe, expect, it } from "vitest";
 import {
  commitCloudSnapshot, initialDocument, loadDocument, readRecoveryCopies,
- readSyncMeta, saveDocument, storeSyncMeta, type Document, type SyncMeta
+ readSyncMeta, saveDocument, saveDocumentIfUnchanged, storeSyncMeta, type Document, type SyncMeta
 } from "../src/lib/mezgeb";
 
 const id="55a033be-4387-4e85-84b1-7b690a5b230a";
@@ -55,5 +55,47 @@ describe("persistent recovery review gate",()=>{
   expect(restored?.holdForReview).toBe(true);
   expect(restored?.revision).toBe(10);
   if(before)await storeSyncMeta(before);
+ });
+});
+
+describe("Phase 3 — crash-safe local and multi-tab writes",()=>{
+ it("rejects a stale tab's IndexedDB save instead of deleting newer transactions",async()=>{
+  const before=documentWith(3100);
+  await saveDocument(before);
+  const changed=documentWith(4600);
+  await saveDocumentIfUnchanged(changed,before);
+  const stale=documentWith(8000);
+  await expect(saveDocumentIfUnchanged(stale,before)).rejects.toThrow(/Another Mezgeb tab/);
+  expect((await loadDocument()).entries[0].cents).toBe(4600);
+ });
+ it("refuses to roll a cloud checkpoint back after another tab synced",async()=>{
+  const before=checkpoint(documentWith(4000),40);
+  await storeSyncMeta(before);
+  await expect(storeSyncMeta(checkpoint(documentWith(5000),39))).rejects.toThrow(/Another tab/);
+  expect((await readSyncMeta())?.revision).toBe(40);
+ });
+ it("restores a local recovery and durable review hold in one transaction",async()=>{
+  const previous=documentWith(6500);
+  const recovered=documentWith(7000);
+  await saveDocument(previous);
+  const checkpointBefore=checkpoint(previous,41);
+  await storeSyncMeta(checkpointBefore);
+  await commitCloudSnapshot(recovered,{...checkpointBefore,holdForReview:true},previous,
+   "Before restoring a historic financial recovery");
+  expect((await loadDocument()).entries[0].cents).toBe(7000);
+  expect((await readSyncMeta())?.holdForReview).toBe(true);
+  expect((await readRecoveryCopies(id))[0].document.entries[0].cents).toBe(6500);
+ });
+ it("rejects an atomic cloud replacement if a second tab edited IndexedDB",async()=>{
+  const original=documentWith(9000);
+  const otherTab=documentWith(9900);
+  const fromCloud=documentWith(12300);
+  await saveDocument(original);
+  await storeSyncMeta(checkpoint(original,42));
+  await saveDocument(otherTab);
+  await expect(commitCloudSnapshot(fromCloud,checkpoint(fromCloud,43),original,
+    "Attempted stale restore")).rejects.toThrow(/Another tab/);
+  expect((await loadDocument()).entries[0].cents).toBe(9900);
+  expect((await readSyncMeta())?.revision).toBe(42);
  });
 });
