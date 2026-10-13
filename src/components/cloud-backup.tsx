@@ -70,7 +70,7 @@ export function CloudBackup(){
  };
  return <section className="surface settings-section cloud-section" aria-label="Automatic Mezgeb cloud synchronization">
    <div className="surface-title"><h2>Secure cloud sync</h2><Cloud size={19}/></div>
-   <p className="muted">Offline-first syncing for verified accounts. Independent transactions merge automatically; conflicting edits are held for your decision.</p>
+   <p className="muted">After verified sign-in, Mezgeb connects cloud sync automatically when it is safe. New entries save on this device first; independent transactions merge, while different existing financial records require your review.</p>
    <div className={"sync-banner sync-"+sync.status} role="status">
     {sync.status==="synced"?<CheckCircle2 size={19}/>:sync.status==="offline"?<WifiOff size={19}/>:sync.status==="conflict"||sync.status==="error"?<AlertTriangle size={19}/>:<Cloud size={19}/>}
     <span>{statuses[sync.status]}</span>
@@ -83,9 +83,9 @@ export function CloudBackup(){
    {sync.status==="unverified"&&<p className="notice">Open the verification link sent to your email, then return here. Unverified accounts cannot upload financial records.</p>}
    {sync.status==="not-linked"&&<div className="cloud-status">
     {sync.cloud&&<p className="notice">An existing cloud ledger was found ({sync.cloud.document.entries.length} entries and {sync.cloud.document.customers.length} customers). Choose carefully before pairing this device.</p>}
-    <button className="btn primary full" disabled={busy||!doc.business.name} onClick={()=>void askConnect("device")}><CloudUpload size={17}/> {sync.cloud?"Use this device's records":"Start automatic sync"}</button>
+    {doc.business.name&&<button className="btn subtle full" disabled={busy} onClick={()=>void askConnect("device")}><CloudUpload size={17}/> {sync.cloud?"Use this device's records (manual review)":"Connect this device manually (optional)"}</button>}
     {sync.cloud&&<button className="btn subtle full" disabled={busy} onClick={()=>void askConnect("cloud")}><CloudDownload size={17}/> Use existing cloud records</button>}
-    {!doc.business.name&&<p className="muted">Set up your business first to upload local records, or restore a saved cloud business.</p>}
+    {!doc.business.name&&<p className="muted">No sync button is needed. Finish business setup and Mezgeb will upload automatically, or restore your existing cloud business when this device is empty.</p>}
    </div>}
    {sync.status==="account-switch"&&<div className="cloud-status">
     <p className="notice"><AlertTriangle size={16}/> This browser is paired to a different Mezgeb identity. Automatic uploading is blocked to prevent cross-account financial data transfer.</p>
