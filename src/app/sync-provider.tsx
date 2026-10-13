@@ -188,7 +188,7 @@ export function SyncProvider({children}:{children:React.ReactNode}){
       // The ledger and its cloud checkpoint must survive crashes together.
       await commitCloudSnapshot(mergedForDevice,next,docRef.current,
         "Before automatic merge from cloud revision "+remote.revision);
-      if(accountRef.current===user&&isSameLedger(docRef.current,local))replace(mergedForDevice);
+      if(accountRef.current===user&&isSameLedger(docRef.current,local))replace(mergedForDevice,true);
     }else{
       await storeSyncMeta(next);
     }
@@ -273,7 +273,7 @@ export function SyncProvider({children}:{children:React.ReactNode}){
       if(!isSameLedger(local,documentForDevice)){
         await commitCloudSnapshot(documentForDevice,next,docRef.current,
           "Before linking cloud records to this device");
-        if(accountRef.current===user&&isSameLedger(docRef.current,local))replace(documentForDevice);
+        if(accountRef.current===user&&isSameLedger(docRef.current,local))replace(documentForDevice,true);
       }else await storeSyncMeta(next);
       metaRef.current=next;setMeta(next);setCloud(remote);
     }else{
@@ -350,7 +350,7 @@ export function SyncProvider({children}:{children:React.ReactNode}){
     if(choice==="cloud"&&!isSameLedger(local,resolvedForDevice)){
       await commitCloudSnapshot(resolvedForDevice,next,docRef.current,
         "Before replacing local records during conflict resolution");
-      if(accountRef.current===user&&isSameLedger(docRef.current,local))replace(resolvedForDevice);
+      if(accountRef.current===user&&isSameLedger(docRef.current,local))replace(resolvedForDevice,true);
     }else await storeSyncMeta(next);
     metaRef.current=next;setMeta(next);setCloud(resolved);
     setConflictList([]);setStatus("synced");setLastSyncedAt(next.lastSyncedAt);
@@ -388,13 +388,15 @@ export function SyncProvider({children}:{children:React.ReactNode}){
   lock.current=true;
   try{
     const local=await flush();
-    await createRecoveryCopy(local,user,"Before restoring saved recovery snapshot");
-    // Hold must reach IndexedDB BEFORE local data is replaced, so crash/reload
-    // cannot interpret a recovery rollback as intentional financial deletions.
+    // The reviewed-recovery hold, restored ledger and safety copy MUST be
+    // committed in one IndexedDB transaction. A crash can never leave the
+    // restored ledger live without the hold or vice versa.
     const paused:SyncMeta={...checkpoint,holdForReview:true};
-    await storeSyncMeta(paused);
+    await commitCloudSnapshot(copy.document,paused,local,
+      "Before restoring saved recovery snapshot");
     metaRef.current=paused;setMeta(paused);
-    replace(copy.document);
+    replace(copy.document,true);
+    setRecovery(await readRecoveryCopies(user));
     setConflictList([{section:"ledger",key:"recovery",reason:"A historical ledger was restored. Select Keep Device or Keep Cloud after reviewing both versions."}]);
     setStatus("conflict");
     setMessage("Recovery restored locally. Automatic uploads are paused for review.");
