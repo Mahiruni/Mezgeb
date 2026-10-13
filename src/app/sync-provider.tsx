@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getSupabaseConfig } from "@/lib/supabase/config";
 import { type Document, type SyncMeta, readSyncMeta, storeSyncMeta, disconnectSyncAccount, createRecoveryCopy, commitCloudSnapshot, readRecoveryCopies, type RecoveryCopy } from "@/lib/mezgeb";
 import { isSameLedger, mergeLedgers, type Conflict } from "@/lib/sync/merge";
+import { decideAutoPair } from "@/lib/sync/auto-pair";
 
 export type SyncStatus =
   "unconfigured" | "checking" | "signed-out" | "unverified" | "not-linked" |
@@ -64,6 +65,7 @@ export function SyncProvider({children}:{children:React.ReactNode}){
  const statusRef=useRef(status);statusRef.current=status;
  const lock=useRef(false);
  const generation=useRef(0);
+ const autoAttempt=useRef("");
 
  const refreshIdentity=useCallback(async()=>{
   if(!activeConfig)return;
@@ -233,7 +235,7 @@ export function SyncProvider({children}:{children:React.ReactNode}){
   }catch(e){setMessage(errMessage(e));setStatus(statusOfError(e,isOnline()));}
  };
 
- const connect=async(choice:"device"|"cloud")=>{
+ const connect=async(choice:"device"|"cloud",automatic=false)=>{
   const user=accountId;
   if(!user||!isVerified||!ready||!metaLoaded||metaRef.current||lock.current)return;
   lock.current=true;setStatus("syncing");setMessage("");
@@ -242,12 +244,24 @@ export function SyncProvider({children}:{children:React.ReactNode}){
     const response=await remoteGET();
     const remote=response.snapshot;
     if(accountRef.current!==user)throw Error("Account changed. Try again.");
+    const autoAction=automatic?decideAutoPair(local,remote?.document||null):null;
+    if(autoAction==="wait-for-business"){
+      setCloud(null);setStatus("not-linked");
+      setMessage("Your cloud backup will start automatically when you finish setting up your business.");
+      return;
+    }
+    if(autoAction==="review-different-records"){
+      setCloud(remote);setStatus("not-linked");
+      setMessage("Both this device and your cloud account contain different financial records. Review which records to use before connecting; neither copy was overwritten.");
+      return;
+    }
     if(!remote){
       if(!local.business.name.trim())throw Error("Set up a business before enabling cloud sync.");
       const uploaded=await remotePOST(local,null,user);
+      if(accountRef.current!==user)throw Error("Account changed during first cloud upload.");
       const next:SyncMeta={key:"active",accountId:user,enabled:true,revision:uploaded.revision,base:local,lastSyncedAt:Date.now()};
       await storeSyncMeta(next);metaRef.current=next;setMeta(next);setCloud(uploaded);
-    }else if(choice==="cloud"||isSameLedger(remote.document,local)){
+    }else if(choice==="cloud"||autoAction==="restore-empty-device"||autoAction==="link-identical"||isSameLedger(remote.document,local)){
       await flush();
       if(!isSameLedger(docRef.current,local)||accountRef.current!==user)
         throw Error("The account or local ledger changed during linking; retry.");
@@ -263,11 +277,19 @@ export function SyncProvider({children}:{children:React.ReactNode}){
       }else await storeSyncMeta(next);
       metaRef.current=next;setMeta(next);setCloud(remote);
     }else{
-      // First-time overwrite is explicit, never a side effect of sign-in.
+      // A first-time cloud overwrite remains strictly manual. Automatic
+      // pairing only uses the safe actions classified above.
       await createRecoveryCopy(remote.document,user,"Cloud records before explicit first-device replacement");
       const uploaded=await remotePOST(local,remote.revision,user);
       const next:SyncMeta={key:"active",accountId:user,enabled:true,revision:uploaded.revision,base:local,lastSyncedAt:Date.now()};
       await storeSyncMeta(next);metaRef.current=next;setMeta(next);setCloud(uploaded);
+    }
+    // A manual reconnect intentionally turns back on sync after an opt-out.
+    if(!automatic){
+      try{
+        window.localStorage.removeItem("mezgeb.sync.optout."+user);
+        window.localStorage.removeItem("mezgeb.sync.previousAccount");
+      }catch{}
     }
     setLinkedAccountId(user);setConflictList([]);setLastSyncedAt(Date.now());
     setRecovery(await readRecoveryCopies(user));setStatus("synced");
@@ -275,6 +297,29 @@ export function SyncProvider({children}:{children:React.ReactNode}){
   }catch(e){setMessage(errMessage(e));setStatus(statusOfError(e,isOnline()));}
   finally{lock.current=false;}
  };
+
+ // For verified accounts, pair automatically when doing so cannot overwrite
+ // different financial ledgers. The cloud is re-read during connect(), so a
+ // stale discovery result cannot authorize a destructive upload.
+ useEffect(()=>{
+   if(!activeConfig||!ready||!metaLoaded||!accountId||!isVerified||meta||!isOnline())return;
+   try{
+     if(window.localStorage.getItem("mezgeb.sync.optout."+accountId)==="1")return;
+     const previous=window.localStorage.getItem("mezgeb.sync.previousAccount");
+     if(previous&&previous!==accountId){
+       setStatus("not-linked");
+       setMessage("This device previously held another account's ledger. Review the data before manually connecting this account; automatic uploading is blocked.");
+       return;
+     }
+   }catch{}
+   const key=JSON.stringify([accountId,doc.business.name,doc.business.tin,
+     doc.business.phone,doc.entries.length,doc.customers.length,doc.nextDraft]);
+   if(autoAttempt.current===key && statusRef.current!=="error" && statusRef.current!=="offline")return;
+   autoAttempt.current=key;
+   void connect("device",true);
+ },[ready,metaLoaded,accountId,isVerified,meta,doc.business.name,
+   doc.business.tin,doc.business.phone,doc.entries.length,doc.customers.length,
+   doc.nextDraft,tick]);
 
  const resolve=async(choice:"device"|"cloud")=>{
   const user=accountId;if(!user||!metaRef.current||!cloudRef.current||lock.current)return;
@@ -320,6 +365,10 @@ export function SyncProvider({children}:{children:React.ReactNode}){
   // Recovery history belongs to the account previously paired to this device,
   // not any new identity that happens to have signed in afterward.
   await createRecoveryCopy(await flush(),linked.accountId,"Before unlinking cloud sync");
+  try{
+    window.localStorage.setItem("mezgeb.sync.optout."+linked.accountId,"1");
+    window.localStorage.setItem("mezgeb.sync.previousAccount",linked.accountId);
+  }catch{}
   await disconnectSyncAccount();
   setMeta(null);metaRef.current=null;setLinkedAccountId(null);setCloud(null);
   setStatus("not-linked");setMessage("Automatic synchronization disabled. Local financial records remain on this device.");
