@@ -99,4 +99,14 @@ describe("Phase 3 — crash-safe local and multi-tab writes",()=>{
   expect((await loadDocument()).entries[0].cents).toBe(9900);
   expect((await readSyncMeta())?.revision).toBe(42);
  });
+ it("blocks a background cloud commit from silently releasing recovery review",async()=>{
+  const local=await loadDocument();
+  const paused={...checkpoint(local,43),holdForReview:true};
+  await storeSyncMeta(paused);
+  await expect(commitCloudSnapshot(local,checkpoint(local,43),local,
+    "Unreviewed background restore")).rejects.toThrow(/paused cloud sync/);
+  expect((await readSyncMeta())?.holdForReview).toBe(true);
+  await commitCloudSnapshot(local,checkpoint(local,43),local,"Reviewed Keep Cloud",true);
+  expect((await readSyncMeta())?.holdForReview).toBeUndefined();
+ });
 });
