@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   robots: { index: false, follow: false }
 };
-export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: "#092A43" };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: "#dae3ec" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <html lang="en"><body><LedgerProvider><SyncProvider><ServiceWorker />{children}</SyncProvider></LedgerProvider></body></html>;
