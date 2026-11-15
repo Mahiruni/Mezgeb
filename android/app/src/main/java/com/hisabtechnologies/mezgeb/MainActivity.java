@@ -23,11 +23,14 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebResourceResponse;
+import android.webkit.ServiceWorkerController;
+import android.webkit.ServiceWorkerClient;
 import android.widget.Toast;
 
 public final class MainActivity extends Activity {
     private static final String APP_HOST = "mezgeb-omega.vercel.app";
-    private static final String APP_URL = "https://" + APP_HOST + "/";
+    private static final String APP_URL = BundledUi.START;
     private static final int PICK_FILE_REQUEST = 71;
     // Dark Android clock, battery and connectivity indicators over pale violet.
     private static final int STATUS_BAR_BACKGROUND = Color.rgb(224, 229, 251);
@@ -109,7 +112,16 @@ public final class MainActivity extends Activity {
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false);
+        // Existing service workers are retained; intercept only the versioned local bundle namespace.
+        ServiceWorkerController.getInstance().setServiceWorkerClient(new ServiceWorkerClient() {
+            @Override public WebResourceResponse shouldInterceptRequest(WebResourceRequest request) {
+                return BundledUi.response(MainActivity.this,request.getUrl(),request.getMethod());
+            }
+        });
         webView.setWebViewClient(new WebViewClient() {
+            @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                return BundledUi.response(MainActivity.this,request.getUrl(),request.getMethod());
+            }
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri url = request.getUrl();
                 if (request.isForMainFrame() && "https".equalsIgnoreCase(url.getScheme())
@@ -139,7 +151,7 @@ public final class MainActivity extends Activity {
                 }
             }
         });
-        if (savedInstanceState != null && webView.restoreState(savedInstanceState) != null) {
+        if (savedInstanceState != null && webView.restoreState(savedInstanceState) != null && webView.getUrl()!=null && BundledUi.isLocal(Uri.parse(webView.getUrl()))) {
             return;
         }
         webView.loadUrl(APP_URL);

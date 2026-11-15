@@ -8,11 +8,29 @@ android {
         applicationId 'com.hisabtechnologies.mezgeb'
         minSdk 26
         targetSdk 35
-        versionCode 5
-        versionName '0.4.0-preview'
+        versionCode 6
+        versionName '0.4.1-bundled-preview'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
 }
+
+def uiRoot = rootProject.projectDir.parentFile
+def uiOutput = file("$buildDir/generated/mezgebUi/assets")
+tasks.register("bundleMezgebUi", Exec) {
+    workingDir uiRoot
+    commandLine "npm", "run", "build:android-ui"
+    inputs.dir(new File(uiRoot,"src"))
+    inputs.file(new File(uiRoot,"scripts/build-android-ui.mjs"))
+    inputs.file(new File(uiRoot,"package.json"))
+    outputs.dir(uiOutput)
+}
+tasks.register("installMezgebUiDependencies", Exec) {
+    workingDir uiRoot
+    commandLine "npm", "install", "--no-audit", "--no-fund"
+}
+tasks.named("bundleMezgebUi").configure { dependsOn("installMezgebUiDependencies") }
+android.sourceSets.main.assets.srcDir(uiOutput)
+tasks.named("preBuild").configure { dependsOn("bundleMezgebUi") }

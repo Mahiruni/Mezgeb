@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build:android-ui": "node scripts/build-android-ui.mjs"
   },
   "dependencies": {
     "next": "^15.5.0",
@@ -28,6 +29,7 @@
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "vitest": "^3.2.0",
-    "fake-indexeddb": "^6.2.0"
+    "fake-indexeddb": "^6.2.0",
+    "esbuild": "0.25.12"
   }
 }
