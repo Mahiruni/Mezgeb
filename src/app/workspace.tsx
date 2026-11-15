@@ -136,7 +136,9 @@ function Reports(){
 
 const UI_RELEASE="0.4.0";
 function AppUpdate(){
+ const {doc,flush}=useLedger();
  const [status,setStatus]=useState("Signature Edition");
+ const [notes,setNotes]=useState<string[]>([]);
  const [busy,setBusy]=useState(false);
  const [available,setAvailable]=useState(false);
  async function check(){
@@ -144,8 +146,9 @@ function AppUpdate(){
   try{
    const response=await fetch("/release.json",{cache:"no-store",credentials:"same-origin"});
    if(!response.ok)throw Error("Unavailable");
-   const release=await response.json() as {version?:string};
+   const release=await response.json() as {version?:string;notes?:Partial<Record<string,string[]>>};
    if(typeof release.version!=="string"||!/^\d+\.\d+\.\d+$/.test(release.version))throw Error("Invalid release");
+   setNotes(release.notes?.[doc.locale]??release.notes?.en??[]);
    const current=UI_RELEASE.split(".").map(Number),latest=release.version.split(".").map(Number);
    const newer=latest.some((n,i)=>n>current[i]&&latest.slice(0,i).every((p,j)=>p===current[j]));
    setAvailable(newer);
@@ -153,7 +156,7 @@ function AppUpdate(){
   }catch{setStatus("Could not check for updates. Try again when online.");}
   finally{setBusy(false);}
  }
- return <section className="surface settings-section update-section"><div className="surface-title"><h2>App updates</h2><Smartphone size={19}/></div><span className="eyebrow">MEZGEB {UI_RELEASE}</span><p className="muted" role="status">{status}</p><button type="button" className="btn primary full" disabled={busy} onClick={()=>void check()}>{busy?"Checking…":"Check for updates"}</button>{available&&<button type="button" className="btn subtle full" onClick={()=>{if(window.confirm("Reload Mezgeb now? Save any unfinished forms first."))window.location.reload();}}>Update interface now</button>}<p className="muted">Interface updates are delivered here over a secure connection. Android package upgrades are separate.</p></section>;
+ return <section className="surface settings-section update-section"><div className="surface-title"><h2>App updates</h2><Smartphone size={19}/></div><span className="eyebrow">MEZGEB · INTERFACE {UI_RELEASE}</span><p className="muted" role="status">{status}</p>{notes.length>0&&<ul className="release-notes">{notes.map(n=><li key={n}>{n}</li>)}</ul><button type="button" className="btn primary full" disabled={busy} onClick={()=>void check()}>{busy?"Checking…":"Check for updates"}</button>{available&&<button type="button" className="btn subtle full" onClick={()=>{if(window.confirm("Reload Mezgeb now? Save any unfinished forms first.")){void flush().then(()=>window.location.reload()).catch(()=>setStatus("Update paused: local records could not be safely saved. Export a backup first."));}}}>Update interface now</button>}<p className="muted">Interface updates are delivered here over a secure connection. Android package upgrades are separate.</p></section>;
 }
 
 function Settings(){
@@ -213,7 +216,7 @@ export function Workspace({section}:{section:string}){
    <Heading eyebrow="YOUR BUSINESS AT A GLANCE" title={tr(doc.locale,words.greeting)} subtitle={doc.business.name+" · "+l("hello")} action={<div className="action-pair"><button className="btn primary" onClick={()=>setNewType("sale")}><Plus size={18}/>{l("sale")}</button><button className="btn subtle" onClick={()=>setNewType("expense")}><ArrowUpRight size={18}/>{l("expense")}</button></div>}/>
    <div className="signature-balance"><div><span>{tr(doc.locale,words.balance)}</span><strong>{money(summary.profit,doc.locale)}</strong><small>{doc.business.name} · {month}</small></div><span className="signature-balance-icon"><Wallet size={32}/></span><button className="btn subtle" onClick={()=>setNewType("sale")}><Plus size={18}/>{l("sale")}</button></div><SignatureTour onNew={()=>setNewType("sale")}/>
    <MonthNav month={month} onChange={setMonth}/>
-   <div className="stats four"><Tile title={l("sales")} value={money(summary.sales,doc.locale)} Icon={ArrowDownLeft} kind="positive" note={summary.count+" total transactions"}/><Tile title={l("expenses")} value={money(summary.expenses,doc.locale)} Icon={ArrowUpRight} kind="negative"/><Tile title={l("balance")} value={money(summary.profit,doc.locale)} Icon={Wallet}/><Tile title={l("outstanding")} value={money(outstanding(doc.customers),doc.locale)} Icon={Users}/></div>
+   <div className="stats four signature-stats"><Tile title={l("sales")} value={money(summary.sales,doc.locale)} Icon={ArrowDownLeft} kind="positive" note={summary.count+" total transactions"}/><Tile title={l("expenses")} value={money(summary.expenses,doc.locale)} Icon={ArrowUpRight} kind="negative"/><Tile title={l("balance")} value={money(summary.profit,doc.locale)} Icon={Wallet}/><Tile title={l("outstanding")} value={money(outstanding(doc.customers),doc.locale)} Icon={Users}/></div>
    <div className="home-grid"><section className="surface"><div className="surface-title"><h2>{l("recent")}</h2><a href="/ledger">{tr(doc.locale,words.view)} <ArrowRight size={15}/></a></div><EntryList entries={recent} onSelect={setEditing} locale={doc.locale}/></section><section className="surface quick-panel"><div className="surface-title"><h2>{tr(doc.locale,words.quick)}</h2></div><button onClick={()=>setNewType("sale")}><span className="quick-icon sale"><Plus size={20}/></span><span><b>New sale</b><small>Capture revenue in seconds</small></span><ChevronRight size={17}/></button><button onClick={()=>setNewType("expense")}><span className="quick-icon expense"><ArrowUpRight size={20}/></span><span><b>New expense</b><small>Track where money goes</small></span><ChevronRight size={17}/></button><a href="/dube"><span className="quick-icon credit"><Users size={20}/></span><span><b>Dube book</b><small>Manage customer balances</small></span><ChevronRight size={17}/></a><a href="/reports"><span className="quick-icon report"><ChartNoAxesCombined size={20}/></span><span><b>Reports</b><small>See the bigger picture</small></span><ChevronRight size={17}/></a></section></div>
   </>}
   {section==="ledger"&&<><Heading eyebrow="ALL YOUR TRANSACTIONS" title={l("ledger")} subtitle="A clear, searchable record of your business activity." action={<div className="action-pair"><button className="btn primary" onClick={()=>setNewType("sale")}><Plus size={17}/> Sale</button><button className="btn subtle" onClick={()=>setNewType("expense")}><Plus size={17}/> Expense</button></div>}/><MonthNav month={month} onChange={setMonth}/><div className="stats three"><Tile title={l("sales")} value={money(summary.sales,doc.locale)} Icon={ArrowDownLeft} kind="positive"/><Tile title={l("expenses")} value={money(summary.expenses,doc.locale)} Icon={ArrowUpRight} kind="negative"/><Tile title={l("balance")} value={money(summary.profit,doc.locale)} Icon={Wallet}/></div><div className="surface"><div className="surface-title"><h2>Transactions</h2><span>{current.length} results</span></div><div className="list-tools"><label className="search"><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder={l("search")} aria-label="Search ledger"/></label><div className="filter-group"><Filter size={17}/><select aria-label="Filter transaction type" value={filter} onChange={e=>setFilter(e.target.value as "all"|EntryType)}><option value="all">All types</option><option value="sale">Sales</option><option value="expense">Expenses</option></select></div></div><EntryList entries={current} onSelect={setEditing} locale={doc.locale}/></div></>}

@@ -1,5 +1,20 @@
 {
   "version": "0.4.0",
   "name": "Signature Edition",
-  "type": "interface"
+  "type": "interface",
+  "notes": {
+    "en": [
+      "Seven guided onboarding stories and instant language selection",
+      "Centered account creation and a new balance overview",
+      "New docked navigation and optional dashboard tour"
+    ],
+    "am": [
+      "ሰባት የመግቢያ ገጾች እና የቋንቋ ምርጫ",
+      "አዲስ የመለያ እና የሂሳብ ገጽ"
+    ],
+    "om": [
+      "Seensa fuula torbaa fi filannoo afaanii",
+      "Fuula herregaa fi cuunfaa maallaqaa haaraa"
+    ]
+  }
 }
