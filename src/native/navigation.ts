@@ -1,6 +1,6 @@
 "use client";
 import {useSyncExternalStore} from "react";
-export const PREFIX="/__mezgeb_native__/1.0.3";
+export const PREFIX="/__mezgeb_native__/1.0.4";
 const EVENT="mezgeb-native-navigation";
 const ROUTES=new Set(["/","/ledger","/receipts","/reports","/dube","/settings","/plans","/auth","/auth/status","/auth/update-password","/privacy"]);
 export function nativeHref(value:string){const u=new URL(value,location.origin);if(u.origin!==location.origin||u.searchParams.has("nativeOnline")||!ROUTES.has(u.pathname))return value;return PREFIX+(u.pathname==="/" ? "/" : u.pathname)+u.search+u.hash;}

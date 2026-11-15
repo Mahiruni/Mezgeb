@@ -8,9 +8,10 @@ android {
         applicationId 'com.hisabtechnologies.mezgeb'
         minSdk 26
         targetSdk 35
-        versionCode 10
-        versionName '1.0.3'
+        versionCode 11
+        versionName '1.0.4'
         manifestPlaceholders = [mezgebLabel: 'Mezgeb']
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     buildTypes {
         recovery {
@@ -49,4 +50,9 @@ tasks.named("bundleMezgebUi").configure { dependsOn("installMezgebUiDependencies
 android.sourceSets.main.assets.srcDir(uiOutput)
 tasks.named("preBuild").configure { dependsOn("bundleMezgebUi") }
 
- dependencies { implementation 'androidx.webkit:webkit:1.12.1' }
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test:core:1.6.1'
+}

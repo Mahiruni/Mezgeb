@@ -133,13 +133,16 @@ function Reports(){
  return <><Heading eyebrow="YOUR NUMBERS" title="Reports & insights" subtitle="A clear picture of how your business is doing." action={<button className="btn subtle" onClick={()=>downloadFile("mezgeb-ledger-"+month+".csv",csv(rows),"text/csv;charset=utf-8")}><Download size={17}/> <Localized text="Export CSV"/></button>}/><MonthNav month={month} onChange={setMonth}/><div className="stats three"><Tile title="Gross sales" value={money(summary.sales,doc.locale)} Icon={ArrowDownLeft} kind="positive"/><Tile title="Expenses" value={money(summary.expenses,doc.locale)} Icon={ArrowUpRight} kind="negative"/><Tile title="Net result" value={money(summary.profit,doc.locale)} Icon={Wallet}/></div><div className="report-grid"><div className="surface"><div className="surface-title"><h2><Localized text="Sales & expenses"/></h2><span><Localized text="Daily"/></span></div>{daily.length?<div className="chart">{daily.map(([day,e])=><div key={day} className="chart-row"><small>{day}</small><div className="chart-track"><span className="sale-bar" style={{width:(100*e.sale/max)+"%"}}/><span className="expense-bar" style={{width:(100*e.expense/max)+"%"}}/></div><strong>{money(e.sale-e.expense)}</strong></div>)}</div>:<Blank title="No activity in this month" Icon={ChartNoAxesCombined}/>}</div><div className="surface"><div className="surface-title"><h2><Localized text="VAT overview"/></h2><span><Localized text="Estimated · 15%"/></span></div>{doc.business.vatRegistered?<div className="vat-list"><div><span><Localized text="Output VAT"/></span><strong>{money(summary.outputVat)}</strong></div><div><span><Localized text="Estimated input VAT*"/></span><strong>− {money(summary.inputVat)}</strong></div><div className="vat-total"><span><Localized text="Estimated VAT due"/></span><strong>{money(summary.vatDue)}</strong></div><small>*Based on stock and utilities categories; eligibility and documentation require accountant review. Not a tax filing.</small></div>:<div className="notice">VAT reporting is disabled for this business.</div>}</div></div></>;
 }
 
-const UI_RELEASE="1.0.3";
+const UI_RELEASE="1.0.4";
 function AppUpdate(){
  const {doc,flush}=useLedger();
  const [status,setStatus]=useState("Signature Edition");
  const [notes,setNotes]=useState<string[]>([]);
  const [busy,setBusy]=useState(false);
  const [available,setAvailable]=useState(false);
+ const [prepared,setPrepared]=useState(false);
+ const native=typeof window!=="undefined"&&window.location.pathname.startsWith("/__mezgeb_native__/");
+ async function prepare(){setBusy(true);setPrepared(false);try{await flush();setPrepared(true);setStatus("Local records saved. You can check for a compatible Android update.");}catch{setStatus("Update paused: local records could not be safely saved. Export a backup first.");}finally{setBusy(false);}}
  async function check(){
   setBusy(true);setAvailable(false);
   try{
@@ -155,6 +158,7 @@ function AppUpdate(){
   }catch{setStatus("Could not check for updates. Try again when online.");}
   finally{setBusy(false);}
  }
+ if(native)return <section className="surface settings-section update-section"><div className="surface-title"><h2><Localized text="App updates"/></h2><Smartphone size={19}/></div><span className="eyebrow">MEZGEB · ANDROID {UI_RELEASE}</span><p className="muted" role="status">{status}</p><p className="muted">This interface is included in your Android package. A new version must be installed as a compatible, signed APK; reloading will not update it.</p><button type="button" className="btn primary full" disabled={busy} onClick={()=>void prepare()}>{busy?"Saving records…":"Prepare secure update"}</button>{prepared&&<a className="btn subtle full" href="/native-update">Check Android package update</a>}<p className="muted">Your installed app verifies the package identity, certificate and checksum before requesting installation.</p></section>;
  return <section className="surface settings-section update-section"><div className="surface-title"><h2><Localized text="App updates"/></h2><Smartphone size={19}/></div><span className="eyebrow">MEZGEB · INTERFACE {UI_RELEASE}</span><p className="muted" role="status">{status}</p>{notes.length>0&&<ul className="release-notes">{notes.map(n=><li key={n}>{n}</li>)}</ul>}<button type="button" className="btn primary full" disabled={busy} onClick={()=>void check()}>{busy?"Checking…":"Check for updates"}</button>{available&&<button type="button" className="btn subtle full" onClick={()=>{if(window.confirm("Reload Mezgeb now? Save any unfinished forms first.")){void flush().then(()=>window.location.reload()).catch(()=>setStatus("Update paused: local records could not be safely saved. Export a backup first."));}}}><Localized text="Update interface now"/></button>}<p className="muted">Interface updates are delivered here over a secure connection. Android package upgrades are separate.</p><a className="btn subtle full" href="/native-update">Check Android package update</a></section>;
 }
 
