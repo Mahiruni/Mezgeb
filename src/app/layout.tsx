@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import "@fontsource-variable/plus-jakarta-sans";
+import "@fontsource-variable/noto-sans-ethiopic";
 import "./globals.css";
 import "./safe-areas.css";
 import { LedgerProvider } from "./providers";

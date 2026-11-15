@@ -18,7 +18,9 @@
     "dexie": "^4.2.0",
     "zod": "^4.0.0",
     "@supabase/ssr": "0.12.7",
-    "@supabase/supabase-js": "2.117.3"
+    "@supabase/supabase-js": "2.117.3",
+    "@fontsource-variable/plus-jakarta-sans": "5.3.0",
+    "@fontsource-variable/noto-sans-ethiopic": "5.3.0"
   },
   "devDependencies": {
     "typescript": "^5.9.2",
