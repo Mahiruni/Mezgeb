@@ -45,12 +45,12 @@ jobs:
               assert any('noto-sans-ethiopic' in p for p in apk.namelist()), 'Ethiopic font missing'
               assert any('plus-jakarta-sans' in p for p in apk.namelist()), 'Latin font missing'
               metadata=json.loads(apk.read(required[-1]))
-              assert metadata['version']=='1.0.2', 'Unexpected interface version'
+              assert metadata['version']=='1.0.3', 'Unexpected interface version'
               assert metadata['origin']=='https://mezgeb-omega.vercel.app', 'Ledger origin changed'
               assert metadata['cloudConfigured'], 'Verified public cloud config missing'
               print('Full bundled UI and public cloud configuration verified')
           PY
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -F "versionCode='9' versionName='1.0.2'"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -F "versionCode='10' versionName='1.0.3'"
       - name: Sign using the owner-held Mezgeb release key
         id: sign
         if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
@@ -75,25 +75,25 @@ jobs:
           mkdir -p release
           TOOL="$ANDROID_HOME/build-tools/35.0.0"
           "$TOOL/zipalign" -f -P 16 4 android/app/build/outputs/apk/release/app-release-unsigned.apk "$RUNNER_TEMP/aligned.apk"
-          "$TOOL/apksigner" sign --ks "$KEY" --ks-key-alias "$KEY_ALIAS" --ks-pass env:STORE_PASSWORD --key-pass env:KEY_PASSWORD --out release/Mezgeb-1.0.2.apk "$RUNNER_TEMP/aligned.apk"
-          "$TOOL/apksigner" verify --verbose --print-certs release/Mezgeb-1.0.2.apk | tee "$RUNNER_TEMP/verify.txt"
+          "$TOOL/apksigner" sign --ks "$KEY" --ks-key-alias "$KEY_ALIAS" --ks-pass env:STORE_PASSWORD --key-pass env:KEY_PASSWORD --out release/Mezgeb-1.0.3.apk "$RUNNER_TEMP/aligned.apk"
+          "$TOOL/apksigner" verify --verbose --print-certs release/Mezgeb-1.0.3.apk | tee "$RUNNER_TEMP/verify.txt"
           ACTUAL=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/verify.txt" | tr '[:upper:]' '[:lower:]')
           EXPECTED=$(printf '%s' "$EXPECTED_CERT" | tr -d ':[:space:]' | tr '[:upper:]' '[:lower:]')
           test "${#EXPECTED}" -eq 64
           test "$ACTUAL" = "$EXPECTED"
-          (cd release && sha256sum Mezgeb-1.0.2.apk > SHA256SUMS.txt)
+          (cd release && sha256sum Mezgeb-1.0.3.apk > SHA256SUMS.txt)
           echo "signed=true" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         if: steps.sign.outputs.signed == 'true'
         with:
-          name: mezgeb-1.0.2-production-signed
+          name: mezgeb-1.0.3-production-signed
           path: release/*
           if-no-files-found: error
           retention-days: 30
       - uses: actions/upload-artifact@v4
         if: steps.sign.outputs.signed != 'true'
         with:
-          name: mezgeb-1.0.2-unsigned-release-candidate
+          name: mezgeb-1.0.3-unsigned-release-candidate
           path: android/app/build/outputs/apk/release/app-release-unsigned.apk
           if-no-files-found: error
           retention-days: 14

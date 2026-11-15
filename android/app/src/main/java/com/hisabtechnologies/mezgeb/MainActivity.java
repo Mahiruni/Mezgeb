@@ -60,19 +60,11 @@ public final class MainActivity extends Activity {
 
     private void initialize(Bundle savedInstanceState) {
         nativeUpdates = new NativeUpdates(this);
+        // PhoneWindow.getInsetsController() can throw before DecorView exists.
+        // Install the decor explicitly, then apply appearance only after content attachment.
+        getWindow().getDecorView();
         getWindow().setStatusBarColor(STATUS_BAR_BACKGROUND);
         getWindow().setNavigationBarColor(Color.rgb(16, 17, 37));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            WindowInsetsController controller = getWindow().getInsetsController();
-            if (controller != null) {
-                controller.setSystemBarsAppearance(
-                    WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
-                    WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
-            }
-        } else {
-            View decor = getWindow().getDecorView();
-            decor.setSystemUiVisibility(decor.getSystemUiVisibility() | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        }
         WebView.setWebContentsDebuggingEnabled(false);
         webView = new WebView(this);
 
@@ -119,6 +111,8 @@ public final class MainActivity extends Activity {
         }
         // Android 8-10 retain their normal non-fullscreen window behavior.
         setContentView(viewport);
+        applySystemBarAppearance();
+        viewport.post(this::applySystemBarAppearance);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             viewport.requestApplyInsets();
         }
@@ -214,6 +208,28 @@ public final class MainActivity extends Activity {
         webView.loadUrl(onlineRecovery ? "https://"+APP_HOST+"/" : APP_URL);
     }
 
+    private void applySystemBarAppearance() {
+        // Appearance is cosmetic. A missing or not-yet-attached controller must never abort launch.
+        try {
+            View decor = getWindow().getDecorView();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                WindowInsetsController controller = decor.getWindowInsetsController();
+                if (controller != null) {
+                    controller.setSystemBarsAppearance(
+                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
+                }
+            } else {
+                decor.setSystemUiVisibility(decor.getSystemUiVisibility() | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+            }
+        } catch (RuntimeException | LinkageError unavailable) {
+            Log.w(TAG,"System bar appearance deferred",unavailable);
+        }
+    }
+    @Override public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) applySystemBarAppearance();
+    }
     private void cancelStartupTimeout() {
         if (startupTimeout != null) { handler.removeCallbacks(startupTimeout); startupTimeout=null; }
     }
@@ -234,6 +250,7 @@ public final class MainActivity extends Activity {
         Button online=new Button(this);online.setText("Open existing online interface");online.setOnClickListener(v->{getIntent().putExtra("mezgebOnlineRecovery",true);recreate();});panel.addView(online);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) getWindow().setDecorFitsSystemWindows(true);
         setContentView(panel);
+        applySystemBarAppearance();
     }
     private boolean handleNavigation(Uri destination) {
         if ("https".equalsIgnoreCase(destination.getScheme()) && APP_HOST.equalsIgnoreCase(destination.getHost())) {
