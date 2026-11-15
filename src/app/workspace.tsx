@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Activity, ArrowDownLeft, ArrowRight, ArrowUpRight, BadgeCheck, BookOpenText, CalendarDays, ChartNoAxesCombined, Check, ChevronLeft, ChevronRight, CircleAlert, CreditCard, Download, FileText, Filter, Landmark, LockKeyhole, Plus, Printer, Search, Settings2, ShieldCheck, Smartphone, Trash2, Upload, Users, Wallet, X } from "lucide-react";
+import {exportFile,confirmExport} from "@/lib/export-file";
 import { useLedger } from "./providers";
 import { Shell } from "@/components/shell";
 import {Localized,localize} from "@/components/localized";
@@ -13,10 +14,7 @@ import { useSync } from "./sync-provider";
 import { creditBalance, csv, documentSchema, expenseCategories, id, initialDocument, label, localeOptions, localDate, money, monthOf, outstanding, parseLegacy, payments, saleCategories, todayISO, toCents, totals, type CopyKey, type Customer, type Document, type Entry, type EntryType } from "@/lib/mezgeb";
 
 function downloadFile(name:string, content:string, type:string){
- const blob=new Blob([content],{type});
- const url=URL.createObjectURL(blob);
- const a=document.createElement("a");a.href=url;a.download=name;a.click();
- window.setTimeout(()=>URL.revokeObjectURL(url),1000);
+ void exportFile(name,content,type).catch(e=>window.alert(e instanceof Error?e.message:"Export failed."));
 }
 function fmtDate(date:string){return new Date(date+"T12:00:00").toLocaleDateString("en-ET",{day:"numeric",month:"short",year:"numeric"});}
 function moveMonth(value:string,delta:number){const [y,m]=value.split("-").map(Number);const d=new Date(y,m-1+delta,1);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0")].join("-");}
@@ -135,7 +133,7 @@ function Reports(){
  return <><Heading eyebrow="YOUR NUMBERS" title="Reports & insights" subtitle="A clear picture of how your business is doing." action={<button className="btn subtle" onClick={()=>downloadFile("mezgeb-ledger-"+month+".csv",csv(rows),"text/csv;charset=utf-8")}><Download size={17}/> <Localized text="Export CSV"/></button>}/><MonthNav month={month} onChange={setMonth}/><div className="stats three"><Tile title="Gross sales" value={money(summary.sales,doc.locale)} Icon={ArrowDownLeft} kind="positive"/><Tile title="Expenses" value={money(summary.expenses,doc.locale)} Icon={ArrowUpRight} kind="negative"/><Tile title="Net result" value={money(summary.profit,doc.locale)} Icon={Wallet}/></div><div className="report-grid"><div className="surface"><div className="surface-title"><h2><Localized text="Sales & expenses"/></h2><span><Localized text="Daily"/></span></div>{daily.length?<div className="chart">{daily.map(([day,e])=><div key={day} className="chart-row"><small>{day}</small><div className="chart-track"><span className="sale-bar" style={{width:(100*e.sale/max)+"%"}}/><span className="expense-bar" style={{width:(100*e.expense/max)+"%"}}/></div><strong>{money(e.sale-e.expense)}</strong></div>)}</div>:<Blank title="No activity in this month" Icon={ChartNoAxesCombined}/>}</div><div className="surface"><div className="surface-title"><h2><Localized text="VAT overview"/></h2><span><Localized text="Estimated · 15%"/></span></div>{doc.business.vatRegistered?<div className="vat-list"><div><span><Localized text="Output VAT"/></span><strong>{money(summary.outputVat)}</strong></div><div><span><Localized text="Estimated input VAT*"/></span><strong>− {money(summary.inputVat)}</strong></div><div className="vat-total"><span><Localized text="Estimated VAT due"/></span><strong>{money(summary.vatDue)}</strong></div><small>*Based on stock and utilities categories; eligibility and documentation require accountant review. Not a tax filing.</small></div>:<div className="notice">VAT reporting is disabled for this business.</div>}</div></div></>;
 }
 
-const UI_RELEASE="1.0.0";
+const UI_RELEASE="1.0.1";
 function AppUpdate(){
  const {doc,flush}=useLedger();
  const [status,setStatus]=useState("Signature Edition");
@@ -161,12 +159,13 @@ function AppUpdate(){
 }
 
 function Settings(){
- const {doc,update,replace}=useLedger();
+ const {doc,update,replace,flush}=useLedger();
  const sync=useSync();
  const [name,setName]=useState(doc.business.name);const [tin,setTin]=useState(doc.business.tin);const [phone,setPhone]=useState(doc.business.phone);const [vat,setVat]=useState(doc.business.vatRegistered);
- const [message,setMessage]=useState("");const fileRef=useRef<HTMLInputElement>(null);
+ const [message,setMessage]=useState("");const [backupBusy,setBackupBusy]=useState(false);const fileRef=useRef<HTMLInputElement>(null);
  useEffect(()=>{setName(doc.business.name);setTin(doc.business.tin);setPhone(doc.business.phone);setVat(doc.business.vatRegistered);},[doc.business]);
  const save=(e:FormEvent)=>{e.preventDefault();if(!name.trim())return;update(s=>({...s,business:{name:name.trim(),tin:tin.trim(),phone:phone.trim(),vatRegistered:vat}}));setMessage("Business details saved on this device.");};
+ const backup=async()=>{if(backupBusy)return;setBackupBusy(true);try{const snapshot=await flush();const result=await exportFile("mezgeb-backup-"+todayISO()+".json",JSON.stringify(snapshot,null,2),"application/json");setMessage(result==="saved"?"Backup saved to your chosen location. Keep it private.":"Backup download requested. Verify the saved file before upgrading.");}catch(e){setMessage(e instanceof Error?e.message:"Backup could not be saved.");}finally{setBackupBusy(false);}};
  const importFile=async(file:File|undefined)=>{
   if(!file)return;
   if(sync.linkedAccountId){setMessage("Turn off cloud sync on this device before replacing the local ledger from a file. Export a backup first.");return;}
@@ -175,14 +174,15 @@ function Settings(){
    const raw=await file.text();const json=JSON.parse(raw);
    const imported=json?.version===2?documentSchema.parse(json):parseLegacy(raw);
    if(!window.confirm("Import "+imported.entries.length+" ledger entries and "+imported.customers.length+" customers? This replaces your current local ledger. Download a backup first."))return;
-   replace(imported);setMessage("Import successful. Original file was not modified.");
+   if(doc.entries.length||doc.customers.length){const previous=await flush();await confirmExport("mezgeb-before-import-"+todayISO()+".json",JSON.stringify(previous,null,2),"application/json");}
+   replace(imported);setMessage("Import accepted. Verify the transaction and customer totals before relying on this copy. Original backup file was not modified.");
   }catch(e){setMessage(e instanceof Error?"Import failed: "+e.message:"Import failed.");}
   finally{if(fileRef.current)fileRef.current.value="";}
  };
  const importOnDevice=()=>{if(sync.linkedAccountId){setMessage("Turn off cloud sync before importing older ledger records. Your linked cloud copy is protected.");return;}const old=localStorage.getItem("mezgeb_v1");if(!old){setMessage("No legacy mezgeb_v1 data found in this browser. Use a JSON export from the old app.");return;}try{const imported=parseLegacy(old);if(window.confirm("Import "+imported.entries.length+" legacy transactions? Download a backup of the current ledger first.")){replace(imported);setMessage("Legacy data imported. The old copy is unchanged.");}}catch(e){setMessage(e instanceof Error?e.message:"Invalid legacy data.");}};
  return <><Heading eyebrow="PREFERENCES & BUSINESS" title="Settings" subtitle="Personalize Mezgeb and keep control of your information."/><div className="settings-grid"><section className="surface settings-section"><div className="surface-title"><h2><Localized text="Business profile"/></h2><Settings2 size={18}/></div><form onSubmit={save}><label><Localized text="Business name"/><input required maxLength={180} value={name} onChange={e=>setName(e.target.value)}/></label><div className="form-grid"><label>TIN<input maxLength={60} value={tin} onChange={e=>setTin(e.target.value)}/></label><label><Localized text="Phone"/><input maxLength={60} value={phone} onChange={e=>setPhone(e.target.value)}/></label></div><label className="check-row"><input type="checkbox" checked={vat} onChange={e=>setVat(e.target.checked)}/><span>VAT registered <small>Enable VAT-inclusive reporting estimates</small></span></label><button className="btn primary" type="submit"><Localized text="Save business details"/></button></form></section>
  <section className="surface settings-section"><div className="surface-title"><h2><Localized text="Experience"/></h2><Smartphone size={18}/></div><label><Localized text="Language"/><select value={doc.locale} onChange={e=>update(s=>({...s,locale:e.target.value as Document["locale"]}))}>{localeOptions.map(l=><option value={l.code} key={l.code}>{l.label}</option>)}</select></label><p className="muted">English, Amharic and Afaan Oromo cover the main workflow; other language options use English fallback. Some advanced screens still need translation review.</p><label><Localized text="Appearance"/><select value={doc.theme} onChange={e=>update(s=>({...s,theme:e.target.value as Document["theme"]}))}><option value="light"><Localized text="Light"/></option><option value="dark"><Localized text="Dark"/></option></select></label></section>
- <section className="surface settings-section"><div className="surface-title"><h2><Localized text="Data & backup"/></h2><Download size={18}/></div><p className="muted">Your ledger saves first on this device. Export JSON regularly; optional manual cloud backup is available below.</p><button className="btn subtle full" onClick={()=>downloadFile("mezgeb-backup-"+todayISO()+".json",JSON.stringify(doc,null,2),"application/json")}><Download size={18}/> <Localized text="Download JSON backup"/></button><input aria-label="Select legacy JSON or backup file" type="file" ref={fileRef} accept=".json,application/json" onChange={e=>void importFile(e.target.files?.[0])}/><button className="btn subtle full" onClick={importOnDevice}><Upload size={18}/> Import old Mezgeb from this browser</button><p className="muted">You can also select an exported legacy JSON file above. Imports require confirmation.</p></section>
+ <section className="surface settings-section"><div className="surface-title"><h2><Localized text="Data & backup"/></h2><Download size={18}/></div><p className="muted">Your ledger saves first on this device. Export JSON regularly; optional manual cloud backup is available below.</p><button className="btn subtle full" disabled={backupBusy} onClick={()=>void backup()}><Download size={18}/> <Localized text="Download JSON backup"/></button><input aria-label="Select legacy JSON or backup file" type="file" ref={fileRef} accept=".json,application/json" onChange={e=>void importFile(e.target.files?.[0])}/><button className="btn subtle full" onClick={importOnDevice}><Upload size={18}/> Import old Mezgeb from this browser</button><p className="muted">You can also select an exported legacy JSON file above. Imports require confirmation. Before changing APK signing identity, save your backup outside the app, open it to verify it, and keep the old app until the restored totals are confirmed.</p></section>
  <section className="surface settings-section"><div className="surface-title"><h2><Localized text="Account & cloud"/></h2><LockKeyhole size={18}/></div><div className="integration-row"><span><ShieldCheck size={18}/> Supabase authentication</span><b>See cloud status below</b></div><div className="integration-row"><span><Landmark size={18}/> <Localized text="Cloud synchronization"/></span><b><Localized text="Not connected"/></b></div><div className="integration-row"><span><CreditCard size={18}/> Chapa paid checkout</span><b><Localized text="Not connected"/></b></div><p className="notice">Manual cloud backup is available after sign-in. Automatic synchronization, certified receipts, and live Chapa payment are not enabled yet.</p><SignatureTour manual/></section><AppUpdate /><CloudBackup /></div>{message&&<p role="status" className="toast">{message}</p>}</>;
 }
 

@@ -8,8 +8,8 @@ android {
         applicationId 'com.hisabtechnologies.mezgeb'
         minSdk 26
         targetSdk 35
-        versionCode 7
-        versionName '1.0.0'
+        versionCode 8
+        versionName '1.0.1'
     }
     buildTypes {
         release {
@@ -40,3 +40,5 @@ tasks.register("installMezgebUiDependencies", Exec) {
 tasks.named("bundleMezgebUi").configure { dependsOn("installMezgebUiDependencies") }
 android.sourceSets.main.assets.srcDir(uiOutput)
 tasks.named("preBuild").configure { dependsOn("bundleMezgebUi") }
+
+ dependencies { implementation 'androidx.webkit:webkit:1.12.1' }

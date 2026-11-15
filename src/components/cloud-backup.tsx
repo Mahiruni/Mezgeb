@@ -4,15 +4,10 @@ import Link from "next/link";
 import { Cloud, CloudOff, CloudUpload, CloudDownload, RefreshCw, ShieldCheck, LogOut, AlertTriangle, WifiOff, History, Link2Off, CheckCircle2 } from "lucide-react";
 import { useLedger } from "@/app/providers";
 import { useSync } from "@/app/sync-provider";
+import {confirmExport} from "@/lib/export-file";
 import { type Document } from "@/lib/mezgeb";
 
-function saveCopy(doc:Document,label:string){
-  const blob=new Blob([JSON.stringify(doc,null,2)],{type:"application/json"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url;a.download="mezgeb-"+label+"-"+new Date().toISOString().slice(0,10)+".json";a.click();
-  window.setTimeout(()=>URL.revokeObjectURL(url),1000);
-}
+function saveCopy(doc:Document,label:string){return confirmExport("mezgeb-"+label+"-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify(doc,null,2),"application/json");}
 const statuses={
  "unconfigured":"Set up Supabase to enable cloud sync",
  "checking":"Verifying your account and backup",
@@ -48,8 +43,7 @@ export function CloudBackup(){
  };
  const resolve=async(choice:"device"|"cloud")=>{
   if(!sync.cloud)return;
-  saveCopy(doc,"local-conflict");
-  saveCopy(sync.cloud.document,"cloud-conflict");
+  try{await saveCopy(doc,"local-conflict");await saveCopy(sync.cloud.document,"cloud-conflict");}catch(e){setNotice(e instanceof Error?e.message:"Backup cancelled.");return;}
   const text=choice==="cloud"?"Keep the CLOUD version? This device's unsynced edits will be replaced; both copies are exported and a recovery history entry is created.":
    "Keep this DEVICE's version? This overwrites the conflicting cloud data, after an extra server revision check. Both versions are exported.";
   if(!window.confirm(text))return;
@@ -58,14 +52,14 @@ export function CloudBackup(){
  };
  const unlink=async()=>{
   if(!window.confirm("Unlink this device from the previously connected account? Data stays here and a recovery copy will be saved. Sign in with the correct account before enabling sync again."))return;
-  saveCopy(doc,"before-unlink");
+  try{await saveCopy(doc,"before-unlink");}catch(e){setNotice(e instanceof Error?e.message:"Backup cancelled.");return;}
   setBusy(true);try{await sync.disconnect();}finally{setBusy(false);}
  };
  const recover=async(index:number)=>{
   const copy=sync.recovery[index];
   if(!copy)return;
   if(!window.confirm("Restore this earlier local recovery copy? Your current ledger is backed up before replacement. It may require conflict review before cloud upload."))return;
-  saveCopy(doc,"before-recovery");
+  try{await saveCopy(doc,"before-recovery");}catch(e){setNotice(e instanceof Error?e.message:"Backup cancelled.");return;}
   setBusy(true);try{await sync.recover(copy);}finally{setBusy(false);}
  };
  return <section className="surface settings-section cloud-section" aria-label="Automatic Mezgeb cloud synchronization">

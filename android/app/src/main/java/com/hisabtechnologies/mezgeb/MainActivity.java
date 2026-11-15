@@ -36,6 +36,7 @@ public final class MainActivity extends Activity {
     private static final int STATUS_BAR_BACKGROUND = Color.rgb(224, 229, 251);
     private WebView webView;
     private NativeUpdates nativeUpdates;
+    private LedgerExport ledgerExport;
     private ValueCallback<Uri[]> pendingFileSelection;
 
     @Override public void onCreate(Bundle savedInstanceState) {
@@ -56,6 +57,8 @@ public final class MainActivity extends Activity {
         }
         WebView.setWebContentsDebuggingEnabled(false);
         webView = new WebView(this);
+        ledgerExport = new LedgerExport(this);
+        ledgerExport.attach(webView);
         webView.setBackgroundColor(Color.rgb(16, 17, 37));
         FrameLayout viewport = new FrameLayout(this);
         viewport.setBackgroundColor(Color.rgb(16, 17, 37));
@@ -175,6 +178,7 @@ public final class MainActivity extends Activity {
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == LedgerExport.REQUEST && ledgerExport != null) {ledgerExport.result(resultCode,data);return;}
         if (requestCode == PICK_FILE_REQUEST && pendingFileSelection != null) {
             pendingFileSelection.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
             pendingFileSelection = null;
@@ -191,6 +195,7 @@ public final class MainActivity extends Activity {
     @Override protected void onDestroy() {
         if (pendingFileSelection != null) { pendingFileSelection.onReceiveValue(null); pendingFileSelection = null; }
         if (nativeUpdates != null) nativeUpdates.close();
+        if (ledgerExport != null) ledgerExport.close();
         super.onDestroy();
     }
 }
