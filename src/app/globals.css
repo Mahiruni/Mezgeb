@@ -94,7 +94,7 @@ body{font-family:"Plus Jakarta Sans","Benaiah","Noto Sans Ethiopic",system-ui,sa
 
 
 /* Electric Violet — complete shared Mezgeb visual system. Semantic money colors stay distinct. */
-:root{--brand:#4925f5;--brand-hover:#3820c6;--sky:#1677f2;--brand-soft:#eeebff;--brand-ink:#3420a4;--navy:var(--brand);--navy2:var(--brand-hover);--gold:#a9d6ff;--bg:#f5f7ff;--surface:#fff;--ink:#101125;--muted:#626981;--line:#e1e5f3;--radius:22px;--shadow:0 8px 32px rgba(53,39,138,.07);--brand-gradient:linear-gradient(120deg,#4925f5,#5539f6 58%,#1677f2);}
+:root{--brand:#4925f5;--brand-hover:#3820c6;--sky:#1677f2;--brand-soft:#eeebff;--brand-ink:#3420a4;--navy:var(--brand);--navy2:var(--brand-hover);--gold:#a9d6ff;--bg:#f5f7ff;--surface:#fff;--ink:#101125;--muted:#626981;--line:#e1e5f3;--radius:22px;--shadow:0 8px 32px rgba(53,39,138,.07);--brand-gradient:linear-gradient(120deg,#4925f5,#5539f6 58%,#1264ce);}
 :root[data-theme=dark]{--bg:#101125;--surface:#191a32;--ink:#f3f3ff;--muted:#aeb4d0;--line:#33344d;--brand-soft:#302652;--brand-ink:#c3b5ff;--shadow:0 12px 32px #0003;--green:#68dfa6;--greenbg:#173a31;--red:#ff939e;--redbg:#412b3b;--gold:#a9d6ff;}
 body{background:var(--bg);font-family:"Plus Jakarta Sans","Benaiah","Noto Sans Ethiopic",system-ui,sans-serif}
 .app-layout{background:radial-gradient(ellipse at 95% 0%,#1677f20c,transparent 42%),var(--bg)}
@@ -151,3 +151,5 @@ input:not([type=checkbox]):focus,select:focus,textarea:focus{border-color:#917af
 @media(max-width:580px){.tile{padding:16px;border-radius:19px}.surface{border-radius:20px;padding:19px 16px}.welcome-band{padding:22px 18px;border-radius:21px;min-height:112px}.entry{min-height:72px}.entry-center strong,.entry-amount{font-size:12px}.entry-center small{font-size:10px}.modal{border-radius:26px 26px 0 0}.onboard-grid{border:0}.onboard-shell{background:var(--bg)}.auth-panel{padding:24px;border-radius:23px}.intro-center h1{letter-spacing:-.065em}.intro-cta{min-width:min(100%,286px)}.topbar .icon-btn{min-height:40px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 @media print{.receipt-paper{color:#111!important;background:#fff!important;box-shadow:none!important}.receipt-logo{color:#111!important}}
+
+.update-section .btn+.btn{margin-top:10px}.update-section .muted{margin:10px 0 16px}
