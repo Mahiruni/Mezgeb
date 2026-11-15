@@ -53,6 +53,7 @@ jobs:
           "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -F "versionCode='8' versionName='1.0.1'"
       - name: Sign using the owner-held Mezgeb release key
         id: sign
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
         shell: bash
         env:
           KEYSTORE_B64: ${{ secrets.MEZGEB_ANDROID_KEYSTORE_BASE64 }}
@@ -90,7 +91,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
       - uses: actions/upload-artifact@v4
-        if: steps.sign.outputs.signed == 'false'
+        if: steps.sign.outputs.signed != 'true'
         with:
           name: mezgeb-1.0.1-unsigned-release-candidate
           path: android/app/build/outputs/apk/release/app-release-unsigned.apk
