@@ -29,15 +29,15 @@ public final class MainActivity extends Activity {
     private static final String APP_HOST = "mezgeb-omega.vercel.app";
     private static final String APP_URL = "https://" + APP_HOST + "/";
     private static final int PICK_FILE_REQUEST = 71;
-    // Dark Android clock, battery and connectivity indicators over pale slate.
-    private static final int STATUS_BAR_BACKGROUND = Color.rgb(218, 227, 236);
+    // Dark Android clock, battery and connectivity indicators over pale violet.
+    private static final int STATUS_BAR_BACKGROUND = Color.rgb(224, 229, 251);
     private WebView webView;
     private ValueCallback<Uri[]> pendingFileSelection;
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().setStatusBarColor(STATUS_BAR_BACKGROUND);
-        getWindow().setNavigationBarColor(Color.rgb(6, 29, 50));
+        getWindow().setNavigationBarColor(Color.rgb(16, 17, 37));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             WindowInsetsController controller = getWindow().getInsetsController();
             if (controller != null) {
@@ -51,9 +51,9 @@ public final class MainActivity extends Activity {
         }
         WebView.setWebContentsDebuggingEnabled(false);
         webView = new WebView(this);
-        webView.setBackgroundColor(Color.rgb(6, 29, 50));
+        webView.setBackgroundColor(Color.rgb(16, 17, 37));
         FrameLayout viewport = new FrameLayout(this);
-        viewport.setBackgroundColor(Color.rgb(6, 29, 50));
+        viewport.setBackgroundColor(Color.rgb(16, 17, 37));
         // On Android 15+, statusBarColor can be transparent under enforced
         // edge-to-edge. Paint the actual inset behind the OS indicators.
         View statusBarBackdrop = new View(this);
