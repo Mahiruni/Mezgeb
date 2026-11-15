@@ -94,7 +94,7 @@ export function CloudBackup(){
    {sync.status==="conflict"&&<div className="cloud-status">
     <p className="notice">Automatic uploads are paused. Two devices changed the same financial record, or a merged balance/reference needs review. Neither copy has been deleted.</p>
     <div className="sync-conflicts">{sync.conflictList.slice(0,12).map((c,i)=><p key={i}><b>{c.section}: {c.key}</b> — {c.reason}</p>)}</div>
-    {sync.cloud&&<><button className="btn subtle full" onClick={()=>{saveCopy(doc,"device-conflict");saveCopy(sync.cloud!.document,"cloud-conflict");}}><CloudDownload size={17}/> Export BOTH copies before resolving</button>
+    {sync.cloud&&<><button className="btn subtle full" disabled={busy} onClick={()=>{setBusy(true);void saveCopy(doc,"device-conflict").then(()=>saveCopy(sync.cloud!.document,"cloud-conflict")).then(()=>setNotice("Both backup copies requested or saved.")).catch(e=>setNotice(e instanceof Error?e.message:"Export cancelled.")).finally(()=>setBusy(false));}}><CloudDownload size={17}/> Export BOTH copies before resolving</button>
       <div className="cloud-buttons">
        <button className="btn subtle" disabled={busy} onClick={()=>void resolve("cloud")}>Keep cloud version</button>
        <button className="btn primary" disabled={busy} onClick={()=>void resolve("device")}>Keep this device</button>
@@ -104,7 +104,7 @@ export function CloudBackup(){
    {(sync.status==="offline"||sync.status==="error")&&<button className="btn subtle" onClick={()=>void sync.refresh()} disabled={busy}><RefreshCw size={16}/> Retry securely</button>}
    {sync.linkedAccountId&&sync.accountId===sync.linkedAccountId&&<div className="sync-recovery">
       <div className="integration-row"><span><History size={17}/> On-device recovery copies</span><button type="button" onClick={()=>setRestoreShow(x=>!x)}>{restoreShow?"Hide":"Show"} ({sync.recovery.length})</button></div>
-      {restoreShow&&<div className="sync-recovery-list">{sync.recovery.slice(0,10).map((copy,index)=><div key={copy.id}><span>{new Date(copy.at).toLocaleString()}<small>{copy.reason}</small></span><button className="btn subtle" disabled={busy} onClick={()=>{saveCopy(copy.document,"recovery-"+(index+1));}}>Export</button><button className="btn subtle" disabled={busy} onClick={()=>void recover(index)}>Restore</button></div>)}</div>}
+      {restoreShow&&<div className="sync-recovery-list">{sync.recovery.slice(0,10).map((copy,index)=><div key={copy.id}><span>{new Date(copy.at).toLocaleString()}<small>{copy.reason}</small></span><button className="btn subtle" disabled={busy} onClick={()=>{setBusy(true);void saveCopy(copy.document,"recovery-"+(index+1)).catch(e=>setNotice(e instanceof Error?e.message:"Export cancelled.")).finally(()=>setBusy(false));}}>Export</button><button className="btn subtle" disabled={busy} onClick={()=>void recover(index)}>Restore</button></div>)}</div>}
       <button className="btn ghost" type="button" disabled={busy} onClick={()=>void unlink()}><Link2Off size={16}/> Turn off sync on this device</button>
     </div>}
    {sync.accountId&&<button className="btn ghost" type="button" disabled={busy} onClick={()=>void sync.signOut()}><LogOut size={16}/> Sign out of Mezgeb account</button>}

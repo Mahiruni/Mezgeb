@@ -17,7 +17,7 @@ export async function exportFile(name:string,content:string,mime:string):Promise
    const finish=()=>{window.clearTimeout(timeout);bridge.onmessage=null;};
    bridge.onmessage=(event)=>{try{const reply=JSON.parse(event.data) as NativeReply;if(reply.id!==id)return;finish();if(reply.status==="saved")resolve("saved");else reject(Error(reply.message||"Export was not saved."));}catch{}};
    timeout=window.setTimeout(()=>{finish();reject(Error("Export timed out. Verify the backup before continuing."));},300000);
-   try{bridge.postMessage(JSON.stringify({id,name,mime:normalized,content}));}catch(e){finish();reject(e);}
+   try{const payload=JSON.stringify({id,name,mime:normalized,content});if(payload.length>25_004_096)throw Error("Export exceeds the Android message limit. Use a smaller backup or the web export.");bridge.postMessage(payload);}catch(e){finish();reject(e);}
   });
  }
  if(location.pathname.startsWith("/__mezgeb_native__/"))throw Error("This Android WebView does not support secure file export. Update Android System WebView and retry.");
