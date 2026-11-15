@@ -28,7 +28,7 @@ export default async function AuthStatusPage() {
    {verified&&<p className="notice" role="status"><ShieldCheck size={17}/> Verified account session active</p>}
    <div className="cloud-buttons">
     <a href="/auth/status" className="btn subtle"><RefreshCw size={16}/> Recheck server session</a>
-    {verified?<Link href="/settings" className="btn primary">Continue to Mezgeb</Link>
+    {verified?<Link href="/" className="btn primary">Continue to Mezgeb</Link>
       :<Link href="/auth" className="btn primary">{user?"Sign in again / resend":"Go to sign in"}</Link>}
    </div>
    <p className="muted">To test session persistence, reload this page or close and reopen your browser. A server verification should still succeed until you sign out or your session expires.</p>

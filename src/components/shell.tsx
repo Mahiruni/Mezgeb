@@ -1,10 +1,11 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Activity, BookOpenText, ChartNoAxesCombined, ChevronDown, ClipboardList, FileText, LayoutDashboard, Menu, Moon, Plus, Settings2, ShieldAlert, Sun, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLedger } from "@/app/providers";
 import { useSync } from "@/app/sync-provider";
+import {tr,words} from "@/lib/signature-copy";
 import { label } from "@/lib/mezgeb";
 
 const nav = [
@@ -18,7 +19,7 @@ const nav = [
 
 export function Shell({ children, onNew }: { children: React.ReactNode; onNew: () => void }) {
  const { doc, error, update } = useLedger();
- const pathname = usePathname();
+ const pathname = usePathname();const router=useRouter();
  const [menu, setMenu] = useState(false);
  useEffect(()=>{setMenu(false);},[pathname]);
  useEffect(()=>{if(!menu)return;const close=(event:KeyboardEvent)=>{if(event.key==="Escape")setMenu(false);};window.addEventListener("keydown",close);return()=>window.removeEventListener("keydown",close);},[menu]);
@@ -35,20 +36,20 @@ export function Shell({ children, onNew }: { children: React.ReactNode; onNew: (
   <aside id="mezgeb-navigation" className={"sidebar"+(menu?" expanded":"")}>
    <div className="brand-wrap"><Link href="/" className="brand" onClick={()=>setMenu(false)}><span className="brand-symbol"><ClipboardList size={23}/></span><span>Mezgeb <small>መዝገብ</small></span></Link><button className="icon-btn sidebar-close" onClick={()=>setMenu(false)} aria-label="Close menu"><X size={20}/></button></div>
    <div className="nav-label">WORKSPACE</div><nav className="side-nav" aria-label="Main navigation">{links}</nav>
-   <div className="sidebar-bottom"><div className="sidebar-note"><ShieldAlert size={19}/><div><b>{syncText}</b><span>Financial records save on this device first. After verified sign-in, cloud sync connects automatically when safe; different existing ledgers require review.</span></div></div><Link href="/plans" className="plan-link">Mezgeb plans <span>↗</span></Link><div className="built">Built for Ethiopian businesses</div></div>
+   <div className="sidebar-bottom"><div className="sidebar-note"><ShieldAlert size={19}/><div><b>{syncText}</b><span>Financial records save on this device first. After verified sign-in, cloud sync connects automatically when safe; different existing ledgers require review.</span></div></div><Link href="/plans" className="plan-link">Mezgeb plans <span>↗</span></Link><Link className="plan-link" href="/settings#signature-tour">{tr(doc.locale,words.help)}</Link><div className="built">Mezgeb · Signature 0.4.0</div></div>
   </aside>
   <div className="app-main">
    <header className="topbar">
     <div className="top-left"><button type="button" className="icon-btn menu-toggle" aria-label="Open menu" aria-expanded={menu} aria-controls="mezgeb-navigation" onClick={()=>setMenu(true)}><Menu size={23}/></button><div className="top-business"><span className="top-eyebrow">YOUR WORKSPACE</span><span className="top-title">{doc.business.name || "Mezgeb"} <ChevronDown size={13}/></span></div></div>
-    <div className="top-actions"><Link className="local-pill" href="/settings" title={"Sync status: "+syncText}><span className={"status-dot "+(sync.status==="synced"?"synced":sync.status==="conflict"?"conflict":"")} />{syncText}</Link><button className="icon-btn" aria-label="Toggle theme" onClick={toggleTheme}>{doc.theme==="light"?<Moon size={19}/>:<Sun size={19}/>}</button><button type="button" className="avatar" aria-label="Account settings" onClick={()=>location.assign("/settings")}>{doc.business.name.trim()[0]?.toUpperCase()||"M"}</button></div>
+    <div className="top-actions"><Link className="local-pill" href="/settings" title={"Sync status: "+syncText}><span className={"status-dot "+(sync.status==="synced"?"synced":sync.status==="conflict"?"conflict":"")} />{syncText}</Link><button className="icon-btn" aria-label="Toggle theme" onClick={toggleTheme}>{doc.theme==="light"?<Moon size={19}/>:<Sun size={19}/>}</button><button type="button" className="avatar" aria-label="Account settings" onClick={()=>router.push("/settings")}>{doc.business.name.trim()[0]?.toUpperCase()||"M"}</button></div>
    </header>
    {(error) && <div className="storage-error" role="alert"><ShieldAlert size={17}/>{error} — Export a backup and avoid closing the page until resolved.</div>}
    <main className="content">{children}</main>
   </div>
-  <nav className="mobile-nav" aria-label="Mobile navigation">{nav.filter(x=>["home","ledger","receipts","reports","settings"].includes(x.key)).map(({slug,key,Icon})=>{
+  <nav className="mobile-nav" aria-label="Mobile navigation">{[nav[0],nav[1],null,nav[4],nav[3]].map((item,i)=>{if(!item)return <button key="add" type="button" className="mobile-nav-link signature-add" onClick={onNew} aria-label={label(doc.locale,"newEntry")}><span><Plus size={25}/></span><small>{label(doc.locale,"newEntry")}</small></button>;const {slug,key,Icon}=item;
    const href=slug?"/"+slug:"/";const active=pathname===href;
    return <Link href={href} className={"mobile-nav-link"+(active?" active":"")} aria-current={active?"page":undefined} key={key}><Icon size={21} strokeWidth={active?2.3:1.8}/><span>{label(doc.locale,key)}</span></Link>;
   })}</nav>
-  <button type="button" className="mobile-fab" onClick={onNew} aria-label="New transaction"><Plus size={25}/></button>
+  
  </div>;
 }

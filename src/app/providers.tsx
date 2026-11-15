@@ -34,7 +34,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.dataset.theme = doc.theme;
     // Chrome/PWA system-bar icon contrast follows the active theme color.
     const metaTheme = document.querySelector('meta[name="theme-color"]');
-    metaTheme?.setAttribute("content", doc.theme === "dark" ? "#132b3f" : "#dae3ec");
+    metaTheme?.setAttribute("content", doc.theme === "dark" ? "#191a32" : "#e0e5fb");
     document.documentElement.lang = doc.locale;
     document.documentElement.dir = doc.locale === "ar" ? "rtl" : "ltr";
     sequence.current = sequence.current.then(async () => {

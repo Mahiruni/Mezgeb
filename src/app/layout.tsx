@@ -6,7 +6,7 @@ import { ServiceWorker } from "@/components/service-worker";
 import { SyncProvider } from "./sync-provider";
 
 export const metadata: Metadata = {
-  title: "Mezgeb መዝገብ — Your daily business ledger",
+  title: "Mezgeb መዝገብ — Signature Edition",
   description: "Record sales and expenses, organize Dube credit, and prepare VAT receipts with Mezgeb, built for Ethiopian businesses.",
   applicationName: "Mezgeb",
   manifest: "/manifest.webmanifest",
