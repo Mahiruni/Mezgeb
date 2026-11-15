@@ -24,6 +24,12 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebResourceResponse;
+import android.webkit.RenderProcessGoneDetail;
+import android.webkit.WebResourceError;
+import android.util.Log;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.LinearLayout;
 import android.webkit.ServiceWorkerController;
 import android.webkit.ServiceWorkerClient;
 import android.widget.Toast;
@@ -35,12 +41,24 @@ public final class MainActivity extends Activity {
     // Dark Android clock, battery and connectivity indicators over pale violet.
     private static final int STATUS_BAR_BACKGROUND = Color.rgb(224, 229, 251);
     private WebView webView;
+    private static final String TAG="MezgebStartup";
+    private boolean onlineRecovery;
+    private boolean recovering;
+    private final android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private Runnable startupTimeout;
     private NativeUpdates nativeUpdates;
     private LedgerExport ledgerExport;
     private ValueCallback<Uri[]> pendingFileSelection;
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        try { initialize(savedInstanceState); } catch (RuntimeException | LinkageError failure) {
+            Log.e(TAG, "Native startup failed", failure);
+            showRecovery("Mezgeb could not open on this device. Your records have not been cleared.");
+        }
+    }
+
+    private void initialize(Bundle savedInstanceState) {
         nativeUpdates = new NativeUpdates(this);
         getWindow().setStatusBarColor(STATUS_BAR_BACKGROUND);
         getWindow().setNavigationBarColor(Color.rgb(16, 17, 37));
@@ -57,8 +75,7 @@ public final class MainActivity extends Activity {
         }
         WebView.setWebContentsDebuggingEnabled(false);
         webView = new WebView(this);
-        ledgerExport = new LedgerExport(this);
-        ledgerExport.attach(webView);
+
         webView.setBackgroundColor(Color.rgb(16, 17, 37));
         FrameLayout viewport = new FrameLayout(this);
         viewport.setBackgroundColor(Color.rgb(16, 17, 37));
@@ -115,12 +132,21 @@ public final class MainActivity extends Activity {
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false);
-        // Existing service workers are retained; intercept only the versioned local bundle namespace.
-        ServiceWorkerController.getInstance().setServiceWorkerClient(new ServiceWorkerClient() {
-            @Override public WebResourceResponse shouldInterceptRequest(WebResourceRequest request) {
-                return BundledUi.response(MainActivity.this,request.getUrl(),request.getMethod());
-            }
-        });
+        // Optional vendor-specific WebView integrations must never prevent startup.
+        try {
+            ServiceWorkerController.getInstance().setServiceWorkerClient(new ServiceWorkerClient() {
+                @Override public WebResourceResponse shouldInterceptRequest(WebResourceRequest request) {
+                    return BundledUi.response(MainActivity.this,request.getUrl(),request.getMethod());
+                }
+            });
+        } catch (RuntimeException | LinkageError unavailable) { Log.w(TAG,"Service worker interception unavailable",unavailable); }
+        try {
+            ledgerExport = new LedgerExport(this);
+            ledgerExport.attach(webView);
+        } catch (RuntimeException | LinkageError unavailable) {
+            ledgerExport = null;
+            Log.w(TAG,"Optional backup bridge unavailable",unavailable);
+        }
         webView.setWebViewClient(new WebViewClient() {
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 return BundledUi.response(MainActivity.this,request.getUrl(),request.getMethod());
@@ -134,12 +160,32 @@ public final class MainActivity extends Activity {
                 }
                 return request.isForMainFrame() && handleNavigation(url);
             }
+            @Override public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+                Log.e(TAG,"WebView renderer stopped; crashed="+detail.didCrash());
+                showRecovery("The Android web engine stopped. Your ledger is still stored on this device.");
+                return true;
+            }
+            @Override public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                if (request.isForMainFrame()) {
+                    Log.e(TAG,"Main frame load failed: "+error.getErrorCode());
+                    showRecovery("Mezgeb could not load its interface. Try opening it again.");
+                }
+            }
             @Override public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
                 handler.cancel(); // Never bypass TLS errors for financial records.
-                Toast.makeText(MainActivity.this, "Secure connection failed. Try again online.", Toast.LENGTH_LONG).show();
+                showRecovery("Secure connection failed. Check your network or device date and try again.");
             }
         });
         webView.setWebChromeClient(new WebChromeClient() {
+            @Override public void onReceivedTitle(WebView view,String title) {
+                if (view == webView && "Mezgeb Ready".equals(title)) {
+                    cancelStartupTimeout();
+                    Log.i(TAG,"Bundled interface ready");
+                } else if (view == webView && "Mezgeb Recovery".equals(title)) {
+                    cancelStartupTimeout();
+                    Log.e(TAG,"Bundled interface recovery screen");
+                }
+            }
             @Override public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams params) {
                 if (pendingFileSelection != null) pendingFileSelection.onReceiveValue(null);
                 pendingFileSelection = callback;
@@ -154,12 +200,36 @@ public final class MainActivity extends Activity {
                 }
             }
         });
-        if (savedInstanceState != null && webView.restoreState(savedInstanceState) != null && webView.getUrl()!=null && BundledUi.isLocal(Uri.parse(webView.getUrl()))) {
-            return;
+        // Always boot the current bundled entry after an update. Never restore a stale versioned URL.
+        // IndexedDB, cookies and localStorage are intentionally retained.
+        onlineRecovery = getIntent().getBooleanExtra("mezgebOnlineRecovery",false);
+        if (!onlineRecovery) {
+            startupTimeout = () -> {if (!isFinishing() && !isDestroyed() && !recovering) showRecovery("The interface did not finish loading. Retry or open the existing online interface.");};
+            handler.postDelayed(startupTimeout,20000);
         }
-        webView.loadUrl(APP_URL);
+        webView.loadUrl(onlineRecovery ? "https://"+APP_HOST+"/" : APP_URL);
     }
 
+    private void cancelStartupTimeout() {
+        if (startupTimeout != null) { handler.removeCallbacks(startupTimeout); startupTimeout=null; }
+    }
+    private void showRecovery(String message) {
+        if (isFinishing() || isDestroyed() || recovering) return;
+        recovering=true;
+        cancelStartupTimeout();
+        WebView previous=webView;webView=null;
+        if(previous!=null){
+            try { android.view.ViewParent parent=previous.getParent();if(parent instanceof ViewGroup)((ViewGroup)parent).removeView(previous);previous.destroy(); }
+            catch(RuntimeException | LinkageError ignored){Log.w(TAG,"Renderer cleanup unavailable");}
+        }
+        LinearLayout panel=new LinearLayout(this);panel.setOrientation(LinearLayout.VERTICAL);panel.setGravity(Gravity.CENTER);panel.setPadding(48,64,48,64);panel.setBackgroundColor(Color.rgb(245,247,255));
+        TextView logo=new TextView(this);logo.setText("መዝገብ");logo.setTextSize(40);logo.setTextColor(Color.rgb(73,37,245));panel.addView(logo);
+        TextView title=new TextView(this);title.setText("Mezgeb");title.setTextSize(26);title.setTextColor(Color.rgb(16,17,37));panel.addView(title);
+        TextView body=new TextView(this);body.setText(message+"\n\nNo records have been deleted. Do not clear app data.");body.setTextSize(16);body.setTextColor(Color.rgb(60,64,86));body.setPadding(0,24,0,24);panel.addView(body);
+        Button retry=new Button(this);retry.setText("Retry Mezgeb");retry.setOnClickListener(v->{getIntent().removeExtra("mezgebOnlineRecovery");recreate();});panel.addView(retry);
+        Button online=new Button(this);online.setText("Open existing online interface");online.setOnClickListener(v->{getIntent().putExtra("mezgebOnlineRecovery",true);recreate();});panel.addView(online);
+        setContentView(panel);
+    }
     private boolean handleNavigation(Uri destination) {
         if ("https".equalsIgnoreCase(destination.getScheme()) && APP_HOST.equalsIgnoreCase(destination.getHost())) {
             return false;
@@ -185,7 +255,7 @@ public final class MainActivity extends Activity {
         }
     }
     @Override protected void onSaveInstanceState(Bundle outState) {
-        if (webView != null) webView.saveState(outState);
+        // Do not persist WebView navigation state across process recreation or releases.
         super.onSaveInstanceState(outState);
     }
     @Override public void onBackPressed() {
@@ -193,6 +263,7 @@ public final class MainActivity extends Activity {
         else super.onBackPressed();
     }
     @Override protected void onDestroy() {
+        cancelStartupTimeout();
         if (pendingFileSelection != null) { pendingFileSelection.onReceiveValue(null); pendingFileSelection = null; }
         if (nativeUpdates != null) nativeUpdates.close();
         if (ledgerExport != null) ledgerExport.close();
