@@ -10,8 +10,16 @@ android {
         targetSdk 35
         versionCode 9
         versionName '1.0.2'
+        manifestPlaceholders = [mezgebLabel: 'Mezgeb']
     }
     buildTypes {
+        recovery {
+            initWith debug
+            applicationIdSuffix '.recovery'
+            versionNameSuffix '-recovery'
+            manifestPlaceholders = [mezgebLabel: 'Mezgeb Recovery Test']
+            matchingFallbacks = ['debug']
+        }
         release {
             debuggable false
             minifyEnabled false

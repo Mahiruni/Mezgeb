@@ -94,6 +94,7 @@ public final class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             getWindow().setDecorFitsSystemWindows(false);
             viewport.setOnApplyWindowInsetsListener((view, insets) -> {
+                if (webView == null) return insets;
                 Insets bars = insets.getInsets(
                     WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
                 // An edge-to-edge window is not automatically resized for IME.
@@ -155,7 +156,10 @@ public final class MainActivity extends Activity {
                 Uri url = request.getUrl();
                 if (request.isForMainFrame() && "https".equalsIgnoreCase(url.getScheme())
                         && APP_HOST.equalsIgnoreCase(url.getHost()) && "/native-update".equals(url.getPath())) {
-                    if (request.hasGesture()) nativeUpdates.check();
+                    if (request.hasGesture()) {
+                        if (!"com.hisabtechnologies.mezgeb".equals(getPackageName())) Toast.makeText(MainActivity.this,"Recovery test cannot install production updates.",Toast.LENGTH_LONG).show();
+                        else nativeUpdates.check();
+                    }
                     return true;
                 }
                 return request.isForMainFrame() && handleNavigation(url);
@@ -228,6 +232,7 @@ public final class MainActivity extends Activity {
         TextView body=new TextView(this);body.setText(message+"\n\nNo records have been deleted. Do not clear app data.");body.setTextSize(16);body.setTextColor(Color.rgb(60,64,86));body.setPadding(0,24,0,24);panel.addView(body);
         Button retry=new Button(this);retry.setText("Retry Mezgeb");retry.setOnClickListener(v->{getIntent().removeExtra("mezgebOnlineRecovery");recreate();});panel.addView(retry);
         Button online=new Button(this);online.setText("Open existing online interface");online.setOnClickListener(v->{getIntent().putExtra("mezgebOnlineRecovery",true);recreate();});panel.addView(online);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) getWindow().setDecorFitsSystemWindows(true);
         setContentView(panel);
     }
     private boolean handleNavigation(Uri destination) {

@@ -26,9 +26,17 @@ jobs:
       - run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
       - name: Build Android installable debug APK
         run: gradle --no-daemon --project-dir android :app:assembleDebug
+      - name: Build separate recovery test APK
+        run: gradle --no-daemon --project-dir android :app:assembleRecovery
       - uses: actions/upload-artifact@v4
         with:
           name: mezgeb-android-preview-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mezgeb-android-recovery-test-apk
+          path: android/app/build/outputs/apk/recovery/app-recovery.apk
           if-no-files-found: error
           retention-days: 14

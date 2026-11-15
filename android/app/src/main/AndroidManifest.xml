@@ -4,7 +4,7 @@
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <application
         android:allowBackup="false"
-        android:label="Mezgeb"
+        android:label="${mezgebLabel}"
         android:icon="@drawable/ic_mezgeb"
         android:roundIcon="@drawable/ic_mezgeb"
         android:theme="@style/Theme.Mezgeb"
