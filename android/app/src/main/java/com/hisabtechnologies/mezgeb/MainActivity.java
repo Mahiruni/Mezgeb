@@ -32,10 +32,12 @@ public final class MainActivity extends Activity {
     // Dark Android clock, battery and connectivity indicators over pale violet.
     private static final int STATUS_BAR_BACKGROUND = Color.rgb(224, 229, 251);
     private WebView webView;
+    private NativeUpdates nativeUpdates;
     private ValueCallback<Uri[]> pendingFileSelection;
 
     @Override public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        nativeUpdates = new NativeUpdates(this);
         getWindow().setStatusBarColor(STATUS_BAR_BACKGROUND);
         getWindow().setNavigationBarColor(Color.rgb(16, 17, 37));
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -109,7 +111,13 @@ public final class MainActivity extends Activity {
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false);
         webView.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                return request.isForMainFrame() && handleNavigation(request.getUrl());
+                Uri url = request.getUrl();
+                if (request.isForMainFrame() && "https".equalsIgnoreCase(url.getScheme())
+                        && APP_HOST.equalsIgnoreCase(url.getHost()) && "/native-update".equals(url.getPath())) {
+                    if (request.hasGesture()) nativeUpdates.check();
+                    return true;
+                }
+                return request.isForMainFrame() && handleNavigation(url);
             }
             @Override public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
                 handler.cancel(); // Never bypass TLS errors for financial records.
@@ -170,6 +178,7 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onDestroy() {
         if (pendingFileSelection != null) { pendingFileSelection.onReceiveValue(null); pendingFileSelection = null; }
+        if (nativeUpdates != null) nativeUpdates.close();
         super.onDestroy();
     }
 }
