@@ -1,56 +1,20 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Activity, BookOpenText, ChartNoAxesCombined, ChevronDown, ClipboardList, FileText, LayoutDashboard, Menu, Moon, Plus, Settings2, ShieldAlert, Sun, Users, X } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useLedger } from "@/app/providers";
-import { useSync } from "@/app/sync-provider";
+import {usePathname,useRouter} from "next/navigation";
+import {useEffect,useRef,useState} from "react";
+import {ArrowLeft,BookOpenText,ChartNoAxesCombined,FileText,LayoutDashboard,Menu,Plus,Search,Settings2,ShieldAlert,Users,X,UserRound,Building2,Cloud,Download,Globe,Palette,Smartphone,HelpCircle,Info,LockKeyhole,LogOut,ChevronRight} from "lucide-react";
+import {useLedger} from "@/app/providers";
+import {useSync} from "@/app/sync-provider";
 import {Localized,localize} from "@/components/localized";
-import {tr,words} from "@/lib/signature-copy";
-import { label } from "@/lib/mezgeb";
-
-const nav = [
- {slug:"",key:"home" as const,Icon:LayoutDashboard},
- {slug:"ledger",key:"ledger" as const,Icon:BookOpenText},
- {slug:"receipts",key:"receipts" as const,Icon:FileText},
- {slug:"reports",key:"reports" as const,Icon:ChartNoAxesCombined},
- {slug:"dube",key:"dube" as const,Icon:Users},
- {slug:"settings",key:"settings" as const,Icon:Settings2}
-];
-
-export function Shell({ children, onNew }: { children: React.ReactNode; onNew: () => void }) {
- const { doc, error, update } = useLedger();
- const pathname = usePathname();const router=useRouter();
- const [menu, setMenu] = useState(false);
- useEffect(()=>{setMenu(false);},[pathname]);
- useEffect(()=>{if(!menu)return;const close=(event:KeyboardEvent)=>{if(event.key==="Escape")setMenu(false);};window.addEventListener("keydown",close);return()=>window.removeEventListener("keydown",close);},[menu]);
- const sync = useSync();
- const syncText = localize(doc.locale, sync.status === "synced" ? "Cloud synced" : sync.status === "syncing" ? "Syncing…" : sync.status === "conflict" ? "Sync conflict" : sync.status === "offline" ? "Offline" : sync.status === "error" ? "Sync error" : "On-device");
- const toggleTheme = () => update(prev => ({ ...prev, theme: prev.theme === "light" ? "dark" : "light" }));
- const links = nav.map(({slug,key,Icon}) => {
-  const href = slug ? "/"+slug : "/";
-  const active = pathname === href;
-  return <Link key={key} className={"nav-link"+(active?" active":"")} href={href} onClick={()=>setMenu(false)} aria-current={active?"page":undefined}><Icon size={19} strokeWidth={active?2.35:1.8}/><span>{label(doc.locale,key)}</span></Link>;
- });
- return <div className="app-layout">
-  {menu && <button type="button" className="scrim" onClick={()=>setMenu(false)} aria-label="Close menu" />}
-  <aside id="mezgeb-navigation" className={"sidebar"+(menu?" expanded":"")}>
-   <div className="brand-wrap"><Link href="/" className="brand" onClick={()=>setMenu(false)}><span className="brand-symbol"><ClipboardList size={23}/></span><span>Mezgeb <small>መዝገብ</small></span></Link><button className="icon-btn sidebar-close" onClick={()=>setMenu(false)} aria-label="Close menu"><X size={20}/></button></div>
-   <div className="nav-label"><Localized text="WORKSPACE"/></div><nav className="side-nav" aria-label="Main navigation">{links}</nav>
-   <div className="sidebar-bottom"><div className="sidebar-note"><ShieldAlert size={19}/><div><b>{syncText}</b><span>Financial records save on this device first. After verified sign-in, cloud sync connects automatically when safe; different existing ledgers require review.</span></div></div><Link href="/plans" className="plan-link"><Localized text="Mezgeb plans"/> <span>↗</span></Link><Link className="plan-link" href="/settings#signature-tour">{tr(doc.locale,words.help)}</Link><div className="built">Mezgeb · Signature 1.0.4</div></div>
-  </aside>
-  <div className="app-main">
-   <header className="topbar">
-    <div className="top-left"><button type="button" className="icon-btn menu-toggle" aria-label="Open menu" aria-expanded={menu} aria-controls="mezgeb-navigation" onClick={()=>setMenu(true)}><Menu size={23}/></button><div className="top-business"><span className="top-eyebrow"><Localized text="YOUR WORKSPACE"/></span><span className="top-title">{doc.business.name || "Mezgeb"} <ChevronDown size={13}/></span></div></div>
-    <div className="top-actions"><Link className="local-pill" href="/settings" title={"Sync status: "+syncText}><span className={"status-dot "+(sync.status==="synced"?"synced":sync.status==="conflict"?"conflict":"")} />{syncText}</Link><button className="icon-btn" aria-label="Toggle theme" onClick={toggleTheme}>{doc.theme==="light"?<Moon size={19}/>:<Sun size={19}/>}</button><button type="button" className="avatar" aria-label="Account settings" onClick={()=>router.push("/settings")}>{doc.business.name.trim()[0]?.toUpperCase()||"M"}</button></div>
-   </header>
-   {(error) && <div className="storage-error" role="alert"><ShieldAlert size={17}/>{error} — Export a backup and avoid closing the page until resolved.</div>}
-   <main className="content">{children}</main>
-  </div>
-  <nav className="mobile-nav" aria-label="Mobile navigation">{[nav[0],nav[1],null,nav[4],nav[3]].map((item,i)=>{if(!item)return <button key="add" type="button" className="mobile-nav-link signature-add" onClick={onNew} aria-label={label(doc.locale,"newEntry")}><span><Plus size={25}/></span><small>{label(doc.locale,"newEntry")}</small></button>;const {slug,key,Icon}=item;
-   const href=slug?"/"+slug:"/";const active=pathname===href;
-   return <Link href={href} className={"mobile-nav-link"+(active?" active":"")} aria-current={active?"page":undefined} key={key}><Icon size={21} strokeWidth={active?2.3:1.8}/><span>{label(doc.locale,key)}</span></Link>;
-  })}</nav>
-  
- </div>;
-}
+import {label,type Entry} from "@/lib/mezgeb";
+import {MezgebBrand} from "./mezgeb-brand";
+import {UniversalSearch,useOverlay,settingsTitle} from "./signature-experience";
+const nav=[{slug:"",key:"home" as const,Icon:LayoutDashboard},{slug:"ledger",key:"ledger" as const,Icon:BookOpenText},{slug:"receipts",key:"receipts" as const,Icon:FileText},{slug:"reports",key:"reports" as const,Icon:ChartNoAxesCombined},{slug:"dube",key:"dube" as const,Icon:Users}];
+const groups=[{title:"Account & business",items:[["My account","/account",UserRound],["Business profile","/settings-business",Building2],["Cloud synchronization","/settings-cloud",Cloud],["Data & backup","/settings-backup",Download]]},{title:"Preferences",items:[["Language","/settings-language",Globe],["Appearance","/settings-appearance",Palette],["App settings","/settings",Settings2],["App updates","/settings-updates",Smartphone]]},{title:"Support",items:[["Help & introduction","/settings-help",HelpCircle],["Privacy & security","/settings-security",LockKeyhole],["About Mezgeb","/settings-about",Info]]}] as const;
+export function Shell({children,onNew,onSearchEntry,onSearchReceipt}:{children:React.ReactNode;onNew:()=>void;onSearchEntry?:(e:Entry)=>void;onSearchReceipt?:(e:Entry)=>void}){const {doc,error,flush}=useLedger();const sync=useSync();const pathname=usePathname(),router=useRouter();const [menu,setMenu]=useState(false),[search,setSearch]=useState(false);const drawer=useRef<HTMLElement>(null);const [notice,setNotice]=useState("");const detail=pathname==="/account"||pathname.startsWith("/settings-");const back=()=>router.push("/settings");const syncText=localize(doc.locale,sync.status==="synced"?"Cloud synced":sync.status==="syncing"?"Syncing…":sync.status==="conflict"?"Sync conflict":sync.status==="offline"?"Offline":sync.status==="error"?"Sync error":"On-device");
+ useEffect(()=>{setMenu(false);setSearch(false);},[pathname]);useOverlay(()=>setMenu(false),menu,drawer);
+ const item=(title:string,href:string,Icon:typeof UserRound)=><Link key={href} href={href} onClick={()=>setMenu(false)} className={"drawer-row"+(pathname===href?" active":"")} aria-current={pathname===href?"page":undefined}><Icon size={20} strokeWidth={1.8}/><span><Localized text={title}/></span><ChevronRight size={15}/></Link>;
+ return <div className="app-layout signature-v2"><div className="app-main" inert={menu||search?true:undefined}><header className="signature-header" data-testid="signature-header">{detail?<><button className="header-icon" aria-label={localize(doc.locale,"Back")} onClick={back}><ArrowLeft size={23}/></button><div className="context-title">{localize(doc.locale,settingsTitle(pathname.slice(1)))}</div></>:<><button className="header-icon" aria-label={localize(doc.locale,"Open menu")} aria-expanded={menu} aria-controls="mezgeb-navigation" onClick={()=>setMenu(true)}><Menu size={24} strokeWidth={1.9}/></button><MezgebBrand small/><span className="header-space"/><button className="header-icon" aria-label={localize(doc.locale,"Search")} onClick={()=>setSearch(true)}><Search size={23} strokeWidth={1.9}/></button><button className="header-avatar" aria-label={localize(doc.locale,"My account")} onClick={()=>router.push("/account")}>{sync.accountId?(sync.email||"M").slice(0,1).toUpperCase():<UserRound size={21} strokeWidth={1.8}/>}</button></>}</header>{error&&<div className="storage-error" role="alert"><ShieldAlert size={17}/>{error} — Export a backup and avoid closing the page until resolved.</div>}<main className="content signature-content">{children}</main></div>
+ <nav className="mobile-nav signature-nav" aria-label="Mobile navigation" inert={menu||search?true:undefined}>{[nav[0],nav[1],null,nav[4],nav[3]].map(item=>{if(!item)return <button key="add" type="button" className="mobile-nav-link signature-add" onClick={onNew} aria-label={label(doc.locale,"newEntry")}><span><Plus size={25}/></span><small>{label(doc.locale,"newEntry")}</small></button>;const {slug,key,Icon}=item;const href=slug?"/"+slug:"/";const active=pathname===href;return <Link href={href} className={"mobile-nav-link"+(active?" active":"")} aria-current={active?"page":undefined} key={key}><Icon size={22} strokeWidth={active?2.2:1.8}/><span>{label(doc.locale,key)}</span></Link>;})}</nav>
+ {menu&&<div className="signature-drawer-backdrop" onClick={e=>{if(e.target===e.currentTarget)setMenu(false);}}><aside ref={drawer} id="mezgeb-navigation" className="signature-drawer" role="dialog" aria-modal="true" aria-label={localize(doc.locale,"Open menu")}><div className="drawer-head"><MezgebBrand/><button className="header-icon" aria-label={localize(doc.locale,"Close menu")} onClick={()=>setMenu(false)}><X size={23}/></button></div><div className="drawer-workspace"><span className="setting-icon"><Building2 size={21}/></span><div><b>{doc.business.name||"Mezgeb"}</b><small><span className={"status-dot "+(sync.status==="synced"?"synced":"")}/>{syncText}</small></div></div><nav aria-label="Main navigation" className="drawer-scroll"><div className="drawer-group"><h3><Localized text="WORKSPACE"/></h3>{nav.map(n=><Link key={n.key} className={"drawer-row"+(pathname==="/"+n.slug?" active":"")} href={"/"+n.slug} onClick={()=>setMenu(false)}><n.Icon size={20} strokeWidth={1.8}/><span>{label(doc.locale,n.key)}</span><ChevronRight size={15}/></Link>)}</div>{groups.map(g=><div className="drawer-group" key={g.title}><h3><Localized text={g.title}/></h3>{g.items.map(([title,href,Icon])=>item(title,href,Icon))}</div>)}<Link className="drawer-row" href="/plans" onClick={()=>setMenu(false)}><Smartphone size={20}/><span><Localized text="Mezgeb plans"/></span><ChevronRight size={15}/></Link></nav><footer className="drawer-footer">{sync.accountId&&<button className="drawer-row sign-out" onClick={()=>{if(!window.confirm("Sign out? Local records stay on this device."))return;void flush().then(()=>sync.signOut()).then(()=>setMenu(false)).catch(e=>setNotice(e instanceof Error?e.message:"Sign out failed"));}}><LogOut size={20}/><span><Localized text="Sign out"/></span></button>}{notice&&<p role="alert">{notice}</p>}<small>Mezgeb · Signature 1.1.0</small></footer></aside></div>}
+ {search&&<UniversalSearch onClose={()=>setSearch(false)} onEntry={onSearchEntry} onReceipt={onSearchReceipt}/>}</div>;}

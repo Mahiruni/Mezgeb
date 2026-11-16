@@ -4,6 +4,7 @@ import "@fontsource-variable/plus-jakarta-sans";
 import "@fontsource-variable/noto-sans-ethiopic";
 import "../app/globals.css";
 import "../app/safe-areas.css";
+import "../app/signature-v2.css";
 import {LedgerProvider,useLedger} from "../app/providers";
 import {SyncProvider} from "../app/sync-provider";
 import {Workspace} from "../app/workspace";

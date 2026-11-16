@@ -281,8 +281,8 @@ public final class MainActivity extends Activity {
         super.onSaveInstanceState(outState);
     }
     @Override public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) webView.goBack();
-        else super.onBackPressed();
+        if(webView==null){super.onBackPressed();return;}
+        webView.evaluateJavascript("window.dispatchEvent(new Event(\"mezgeb-back\",{cancelable:true}))",result->{if("false".equals(result))return;if(webView!=null&&webView.canGoBack())webView.goBack();else MainActivity.super.onBackPressed();});
     }
     @Override protected void onDestroy() {
         cancelStartupTimeout();

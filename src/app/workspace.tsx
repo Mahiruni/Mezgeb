@@ -1,5 +1,7 @@
 "use client";
 
+import {SettingsIndex,DetailHeading,Preferences,AccountOverview,SecurityOverview,useOverlay} from "@/components/signature-experience";
+import {MezgebBrand} from "@/components/mezgeb-brand";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Activity, ArrowDownLeft, ArrowRight, ArrowUpRight, BadgeCheck, BookOpenText, CalendarDays, ChartNoAxesCombined, Check, ChevronLeft, ChevronRight, CircleAlert, CreditCard, Download, FileText, Filter, Landmark, LockKeyhole, Plus, Printer, Search, Settings2, ShieldCheck, Smartphone, Trash2, Upload, Users, Wallet, X } from "lucide-react";
 import {exportFile,confirmExport} from "@/lib/export-file";
@@ -46,7 +48,8 @@ function Onboard(){
 }
 
 function EntryEditor({type,entry,onClose}:{type:EntryType;entry:Entry|null;onClose:()=>void}){
- const {doc,update}=useLedger();
+ const {doc,commit}=useLedger();
+ const [saving,setSaving]=useState(false);const saveLock=useRef(false);
  const [kind,setKind]=useState<EntryType>(entry?.type||type);
  const [amount,setAmount]=useState(entry?(entry.cents/100).toFixed(2):"");
  const [category,setCategory]=useState(entry?.category|| (type==="sale"?saleCategories[0]:expenseCategories[0]));
@@ -58,9 +61,11 @@ function EntryEditor({type,entry,onClose}:{type:EntryType;entry:Entry|null;onClo
  const max=30;
  const count=doc.entries.filter(e=>e.receipt&&e.receipt.status==="draft"&&monthOf(e.date)===monthOf(date)).length;
  useEffect(()=>{if(!entry)setCategory(kind==="sale"?saleCategories[0]:expenseCategories[0]);},[kind,entry]);
- useEffect(()=>{const handler=(event:KeyboardEvent)=>{if(event.key==="Escape")onClose();};document.addEventListener("keydown",handler);return ()=>document.removeEventListener("keydown",handler);},[onClose]);
- const save=(event:FormEvent)=>{
-  event.preventDefault();
+ const dirty=amount!==(entry?(entry.cents/100).toFixed(2):"")||note!==(entry?.note||"")||kind!==(entry?.type||type)||category!==(entry?.category||(type==="sale"?saleCategories[0]:expenseCategories[0]))||pay!==(entry?.pay||"Cash")||date!==(entry?.date||todayISO())||receipt!==Boolean(entry?.receipt);
+ const close=()=>{if(saveLock.current)return;if(!dirty||window.confirm(localize(doc.locale,"Discard unsaved changes?")))onClose();};
+ const sheetRef=useRef<HTMLElement>(null);useOverlay(close,true,sheetRef);
+ const save=async(event:FormEvent)=>{
+  event.preventDefault();if(saveLock.current)return;saveLock.current=true;setSaving(true);setError("");
   try{
    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(new Date(date+"T12:00:00").valueOf()))throw Error("Choose a valid date.");
    const cents=toCents(amount);
@@ -68,7 +73,7 @@ function EntryEditor({type,entry,onClose}:{type:EntryType;entry:Entry|null;onClo
    if(entry?.receipt?.status==="legacy")throw Error("Legacy receipts are read-only for traceability.");
    if(kind==="sale"&&receipt&&!entry?.receipt&&count>=max)throw Error("The 30 local-draft monthly limit has been reached. Paid plans are not yet connected.");
    const now=Date.now();
-   update(s=>{
+   await commit(s=>{
     let receiptRecord=entry?.receipt||null;let nextDraft=s.nextDraft;
     if(kind==="sale"&&receipt&&!receiptRecord){receiptRecord={number:"DRAFT-"+id().slice(0,8).toUpperCase()+"-"+String(nextDraft++).padStart(4,"0"),status:"draft"};}
     if(!receipt)receiptRecord=null;
@@ -76,19 +81,19 @@ function EntryEditor({type,entry,onClose}:{type:EntryType;entry:Entry|null;onClo
     return {...s,nextDraft,entries:entry?s.entries.map(e=>e.id===entry.id?record:e):[record,...s.entries]};
    });
    onClose();
-  }catch(e){setError(e instanceof Error?e.message:"Cannot save this entry.");}
+  }catch(e){setError(e instanceof Error?e.message:"Cannot save this entry.");}finally{saveLock.current=false;setSaving(false);}
  };
- const remove=()=>{if(!entry)return;if(entry.receipt){setError("Receipt-related transactions must be retained for traceability. Contact your accountant about reversals.");return;}if(!window.confirm("Delete this transaction?"))return;update(s=>({...s,entries:s.entries.filter(e=>e.id!==entry.id)}));onClose();};
- return <div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}><section className="modal" role="dialog" aria-modal="true" aria-label={entry?"Edit transaction":"Record transaction"}><div className="modal-header"><div><span className="eyebrow"><Localized text="DAILY LEDGER"/></span><h2>{entry?"Edit transaction":"New transaction"}</h2></div><button className="icon-btn" type="button" aria-label="Close" onClick={onClose}><X size={21}/></button></div><form onSubmit={save} className="modal-content">
+ const remove=async()=>{if(!entry||saveLock.current)return;if(entry.receipt){setError("Receipt-related transactions must be retained for traceability. Contact your accountant about reversals.");return;}if(!window.confirm("Delete this transaction?"))return;saveLock.current=true;setSaving(true);try{await commit(s=>({...s,entries:s.entries.filter(e=>e.id!==entry.id)}));onClose();}catch(e){setError(e instanceof Error?e.message:"Cannot delete.");}finally{saveLock.current=false;setSaving(false);}};
+ return <div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)close();}}><section ref={sheetRef} className="modal signature-transaction" role="dialog" aria-modal="true" aria-label={entry?"Edit transaction":"Record transaction"}><span className="sheet-grip"/><div className="modal-header"><div><span className="eyebrow"><Localized text="DAILY LEDGER"/></span><h2>{entry?"Edit transaction":"New transaction"}</h2></div><button className="icon-btn" type="button" aria-label="Close" onClick={close}><X size={21}/></button></div><form onSubmit={save} className="modal-content">
    <div className="segmented"><button type="button" disabled={Boolean(entry?.receipt)} className={kind==="sale"?"selected":""} onClick={()=>{setKind("sale");setReceipt(false);}}><Localized text="Sale"/></button><button type="button" disabled={Boolean(entry?.receipt)} className={kind==="expense"?"selected":""} onClick={()=>{setKind("expense");setReceipt(false);}}><Localized text="Expense"/></button></div>
-   <label className="big-amount"><Localized text="Amount (ETB)"/><div><span>Br</span><input required autoFocus inputMode="decimal" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="0.00" aria-label="Amount in ETB"/></div></label>
+   <label className="big-amount"><Localized text="Amount (ETB)"/><div><span>Br</span><input required inputMode="decimal" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="0.00" aria-label="Amount in ETB"/></div></label>
    <div className="form-grid"><label><Localized text="Date"/><input required type="date" value={date} onChange={e=>setDate(e.target.value)} /></label><label><Localized text="Category"/><select value={category} onChange={e=>setCategory(e.target.value)}>{(kind==="sale"?saleCategories:expenseCategories).concat(entry&&!((kind==="sale"?saleCategories:expenseCategories).includes(entry.category))?[entry.category]:[]).map(c=><option key={c}>{c}</option>)}</select></label></div>
    <label><Localized text="Payment method"/><select value={pay} onChange={e=>setPay(e.target.value)}>{payments.concat(entry&&!payments.includes(entry.pay)?[entry.pay]:[]).map(p=><option key={p}>{p}</option>)}</select></label>
    <label><Localized text="Note (optional)"/><textarea rows={2} maxLength={1000} value={note} onChange={e=>setNote(e.target.value)} placeholder="What was this for?"/></label>
    {kind==="sale"&&<label className="check-row"><input type="checkbox" checked={receipt} disabled={Boolean(entry?.receipt?.status==="legacy")} onChange={e=>setReceipt(e.target.checked)}/><span><Localized text="Prepare a draft receipt"/> <small>Not an official tax document · {count}/{max} local drafts this month</small></span></label>}
    {entry?.receipt?.status==="legacy"&&<p className="notice">This imported receipt is preserved as a legacy record and cannot be edited.</p>}
    {error&&<p role="alert" className="form-error">{error}</p>}
-   <div className="form-actions">{entry&&!entry.receipt&&<button className="btn danger ghost" type="button" onClick={remove}><Trash2 size={17}/> <Localized text="Delete"/></button>}<button className="btn subtle" type="button" onClick={onClose}><Localized text="Cancel"/></button><button className="btn primary" disabled={Boolean(entry?.receipt?.status==="legacy")} type="submit"><Check size={18}/> <Localized text="Save transaction"/></button></div>
+   <div className="form-actions">{entry&&!entry.receipt&&<button className="btn danger ghost" type="button" disabled={saving} onClick={()=>void remove()}><Trash2 size={17}/> <Localized text="Delete"/></button>}<button className="btn subtle" type="button" disabled={saving} onClick={close}><Localized text="Cancel"/></button><button className="btn primary" disabled={saving||Boolean(entry?.receipt?.status==="legacy")} type="submit"><Check size={18}/> <Localized text={saving?"Saving…":"Save transaction"}/></button></div>
   </form></section></div>;
 }
 
@@ -133,7 +138,7 @@ function Reports(){
  return <><Heading eyebrow="YOUR NUMBERS" title="Reports & insights" subtitle="A clear picture of how your business is doing." action={<button className="btn subtle" onClick={()=>downloadFile("mezgeb-ledger-"+month+".csv",csv(rows),"text/csv;charset=utf-8")}><Download size={17}/> <Localized text="Export CSV"/></button>}/><MonthNav month={month} onChange={setMonth}/><div className="stats three"><Tile title="Gross sales" value={money(summary.sales,doc.locale)} Icon={ArrowDownLeft} kind="positive"/><Tile title="Expenses" value={money(summary.expenses,doc.locale)} Icon={ArrowUpRight} kind="negative"/><Tile title="Net result" value={money(summary.profit,doc.locale)} Icon={Wallet}/></div><div className="report-grid"><div className="surface"><div className="surface-title"><h2><Localized text="Sales & expenses"/></h2><span><Localized text="Daily"/></span></div>{daily.length?<div className="chart">{daily.map(([day,e])=><div key={day} className="chart-row"><small>{day}</small><div className="chart-track"><span className="sale-bar" style={{width:(100*e.sale/max)+"%"}}/><span className="expense-bar" style={{width:(100*e.expense/max)+"%"}}/></div><strong>{money(e.sale-e.expense)}</strong></div>)}</div>:<Blank title="No activity in this month" Icon={ChartNoAxesCombined}/>}</div><div className="surface"><div className="surface-title"><h2><Localized text="VAT overview"/></h2><span><Localized text="Estimated · 15%"/></span></div>{doc.business.vatRegistered?<div className="vat-list"><div><span><Localized text="Output VAT"/></span><strong>{money(summary.outputVat)}</strong></div><div><span><Localized text="Estimated input VAT*"/></span><strong>− {money(summary.inputVat)}</strong></div><div className="vat-total"><span><Localized text="Estimated VAT due"/></span><strong>{money(summary.vatDue)}</strong></div><small>*Based on stock and utilities categories; eligibility and documentation require accountant review. Not a tax filing.</small></div>:<div className="notice">VAT reporting is disabled for this business.</div>}</div></div></>;
 }
 
-const UI_RELEASE="1.0.4";
+const UI_RELEASE="1.1.0";
 function AppUpdate(){
  const {doc,flush}=useLedger();
  const [status,setStatus]=useState("Signature Edition");
@@ -162,13 +167,13 @@ function AppUpdate(){
  return <section className="surface settings-section update-section"><div className="surface-title"><h2><Localized text="App updates"/></h2><Smartphone size={19}/></div><span className="eyebrow">MEZGEB · INTERFACE {UI_RELEASE}</span><p className="muted" role="status">{status}</p>{notes.length>0&&<ul className="release-notes">{notes.map(n=><li key={n}>{n}</li>)}</ul>}<button type="button" className="btn primary full" disabled={busy} onClick={()=>void check()}>{busy?"Checking…":"Check for updates"}</button>{available&&<button type="button" className="btn subtle full" onClick={()=>{if(window.confirm("Reload Mezgeb now? Save any unfinished forms first.")){void flush().then(()=>window.location.reload()).catch(()=>setStatus("Update paused: local records could not be safely saved. Export a backup first."));}}}><Localized text="Update interface now"/></button>}<p className="muted">Interface updates are delivered here over a secure connection. Android package upgrades are separate.</p><a className="btn subtle full" href="/native-update">Check Android package update</a></section>;
 }
 
-function Settings(){
- const {doc,update,replace,flush}=useLedger();
+function Settings({section}:{section:string}){
+ const {doc,update,replace,flush,commit}=useLedger();
  const sync=useSync();
  const [name,setName]=useState(doc.business.name);const [tin,setTin]=useState(doc.business.tin);const [phone,setPhone]=useState(doc.business.phone);const [vat,setVat]=useState(doc.business.vatRegistered);
  const [message,setMessage]=useState("");const [backupBusy,setBackupBusy]=useState(false);const fileRef=useRef<HTMLInputElement>(null);
  useEffect(()=>{setName(doc.business.name);setTin(doc.business.tin);setPhone(doc.business.phone);setVat(doc.business.vatRegistered);},[doc.business]);
- const save=(e:FormEvent)=>{e.preventDefault();if(!name.trim())return;update(s=>({...s,business:{name:name.trim(),tin:tin.trim(),phone:phone.trim(),vatRegistered:vat}}));setMessage("Business details saved on this device.");};
+ const save=async(e:FormEvent)=>{e.preventDefault();if(!name.trim()||backupBusy)return;setBackupBusy(true);try{await commit(s=>({...s,business:{name:name.trim(),tin:tin.trim(),phone:phone.trim(),vatRegistered:vat}}));setMessage("Saved on this device");}catch(e){setMessage(e instanceof Error?e.message:"Could not save business details.");}finally{setBackupBusy(false);}};
  const backup=async()=>{if(backupBusy)return;setBackupBusy(true);try{const snapshot=await flush();const result=await exportFile("mezgeb-backup-"+todayISO()+".json",JSON.stringify(snapshot,null,2),"application/json");setMessage(result==="saved"?"Backup saved to your chosen location. Keep it private.":"Backup download requested. Verify the saved file before upgrading.");}catch(e){setMessage(e instanceof Error?e.message:"Backup could not be saved.");}finally{setBackupBusy(false);}};
  const importFile=async(file:File|undefined)=>{
   if(!file)return;
@@ -184,10 +189,10 @@ function Settings(){
   finally{if(fileRef.current)fileRef.current.value="";}
  };
  const importOnDevice=async()=>{if(sync.linkedAccountId){setMessage("Turn off cloud sync before importing older ledger records. Your linked cloud copy is protected.");return;}const old=localStorage.getItem("mezgeb_v1");if(!old){setMessage("No legacy mezgeb_v1 data found in this browser. Use a JSON export from the old app.");return;}try{const imported=parseLegacy(old);if(window.confirm("Import "+imported.entries.length+" legacy transactions? Download a backup of the current ledger first.")){if(doc.entries.length||doc.customers.length){const previous=await flush();await confirmExport("mezgeb-before-import-"+todayISO()+".json",JSON.stringify(previous,null,2),"application/json");}replace(imported);setMessage("Legacy data imported. The old copy is unchanged.");}}catch(e){setMessage(e instanceof Error?e.message:"Invalid legacy data.");}};
- return <><Heading eyebrow="PREFERENCES & BUSINESS" title="Settings" subtitle="Personalize Mezgeb and keep control of your information."/><div className="settings-grid"><section className="surface settings-section"><div className="surface-title"><h2><Localized text="Business profile"/></h2><Settings2 size={18}/></div><form onSubmit={save}><label><Localized text="Business name"/><input required maxLength={180} value={name} onChange={e=>setName(e.target.value)}/></label><div className="form-grid"><label>TIN<input maxLength={60} value={tin} onChange={e=>setTin(e.target.value)}/></label><label><Localized text="Phone"/><input maxLength={60} value={phone} onChange={e=>setPhone(e.target.value)}/></label></div><label className="check-row"><input type="checkbox" checked={vat} onChange={e=>setVat(e.target.checked)}/><span>VAT registered <small>Enable VAT-inclusive reporting estimates</small></span></label><button className="btn primary" type="submit"><Localized text="Save business details"/></button></form></section>
- <section className="surface settings-section"><div className="surface-title"><h2><Localized text="Experience"/></h2><Smartphone size={18}/></div><label><Localized text="Language"/><select value={doc.locale} onChange={e=>update(s=>({...s,locale:e.target.value as Document["locale"]}))}>{localeOptions.map(l=><option value={l.code} key={l.code}>{l.label}</option>)}</select></label><p className="muted">English, Amharic and Afaan Oromo cover the main workflow; other language options use English fallback. Some advanced screens still need translation review.</p><label><Localized text="Appearance"/><select value={doc.theme} onChange={e=>update(s=>({...s,theme:e.target.value as Document["theme"]}))}><option value="light"><Localized text="Light"/></option><option value="dark"><Localized text="Dark"/></option></select></label></section>
- <section className="surface settings-section"><div className="surface-title"><h2><Localized text="Data & backup"/></h2><Download size={18}/></div><p className="muted">Your ledger saves first on this device. Export JSON regularly; optional manual cloud backup is available below.</p><button className="btn subtle full" disabled={backupBusy} onClick={()=>void backup()}><Download size={18}/> <Localized text="Download JSON backup"/></button><input aria-label="Select legacy JSON or backup file" type="file" ref={fileRef} accept=".json,application/json" onChange={e=>void importFile(e.target.files?.[0])}/><button className="btn subtle full" onClick={()=>void importOnDevice()}><Upload size={18}/> Import old Mezgeb from this browser</button><p className="muted">You can also select an exported legacy JSON file above. Imports require confirmation. Before changing APK signing identity, save your backup outside the app, open it to verify it, and keep the old app until the restored totals are confirmed.</p></section>
- <section className="surface settings-section"><div className="surface-title"><h2><Localized text="Account & cloud"/></h2><LockKeyhole size={18}/></div><div className="integration-row"><span><ShieldCheck size={18}/> Supabase authentication</span><b>See cloud status below</b></div><div className="integration-row"><span><Landmark size={18}/> <Localized text="Cloud synchronization"/></span><b><Localized text="Not connected"/></b></div><div className="integration-row"><span><CreditCard size={18}/> Chapa paid checkout</span><b><Localized text="Not connected"/></b></div><p className="notice">Manual cloud backup is available after sign-in. Automatic synchronization, certified receipts, and live Chapa payment are not enabled yet.</p><SignatureTour manual/></section><AppUpdate /><CloudBackup /></div>{message&&<p role="status" className="toast">{message}</p>}</>;
+ if(section==="settings")return <SettingsIndex/>;
+ return <div className="signature-detail"><DetailHeading section={section}/>{section==="account"&&<AccountOverview/>}{section==="settings-business"&&<section className="surface settings-section"><div className="surface-title"><h2><Localized text="Business profile"/></h2><Settings2 size={18}/></div><form onSubmit={save}><label><Localized text="Business name"/><input required maxLength={180} value={name} onChange={e=>setName(e.target.value)}/></label><div className="form-grid"><label>TIN<input maxLength={60} value={tin} onChange={e=>setTin(e.target.value)}/></label><label><Localized text="Phone"/><input type="tel" inputMode="tel" maxLength={60} value={phone} onChange={e=>setPhone(e.target.value)}/></label></div><label className="check-row"><input type="checkbox" checked={vat} onChange={e=>setVat(e.target.checked)}/><span>VAT registered <small>Enable VAT-inclusive reporting estimates</small></span></label><button className="btn primary" type="submit" disabled={backupBusy}><Localized text="Save business details"/></button></form></section>}{(section==="settings-language"||section==="settings-appearance")&&<Preferences section={section}/>}
+ {section==="settings-tax"&&<section className="surface settings-section"><h2><Localized text="Tax & receipts"/></h2><label className="check-row"><input type="checkbox" checked={doc.business.vatRegistered} onChange={e=>update(d=>({...d,business:{...d.business,vatRegistered:e.target.checked}}))}/><span>VAT registered <small>Enable estimated VAT reporting</small></span></label><p className="notice">Receipts are local drafts, not official tax documents. Official issuance requires verified backend integration.</p></section>}
+ {section==="settings-security"&&<SecurityOverview/>}{section==="settings-cloud"&&<CloudBackup/>}{section==="settings-backup"&&<section className="surface settings-section"><div className="surface-title"><h2><Localized text="Data & backup"/></h2><Download size={18}/></div><p className="muted">Your ledger saves first on this device. Export JSON regularly; optional manual cloud backup is available below.</p><button className="btn subtle full" disabled={backupBusy} onClick={()=>void backup()}><Download size={18}/> <Localized text="Download JSON backup"/></button><input aria-label="Select legacy JSON or backup file" type="file" ref={fileRef} accept=".json,application/json" onChange={e=>void importFile(e.target.files?.[0])}/><button className="btn subtle full" onClick={()=>void importOnDevice()}><Upload size={18}/> Import old Mezgeb from this browser</button><p className="muted">You can also select an exported legacy JSON file above. Imports require confirmation. Before changing APK signing identity, save your backup outside the app, open it to verify it, and keep the old app until the restored totals are confirmed.</p></section>}{section==="settings-updates"&&<AppUpdate/>}{section==="settings-help"&&<section className="surface settings-section"><SignatureTour manual/><p><Localized text="Keep your records safe"/></p><a className="btn subtle full" href="/settings-backup"><Localized text="Data & backup"/></a></section>}{section==="settings-about"&&<section className="surface settings-section"><MezgebBrand/><h2>Signature 1.1.0</h2><p>Mezgeb by Hisab Technologies.</p><a className="btn subtle full" href="/privacy"><Localized text="View privacy notice"/></a></section>}{message&&<p role="status" className="toast"><Localized text={message}/></p>}</div>;
 }
 
 function Plans(){
@@ -214,9 +219,9 @@ export function Workspace({section}:{section:string}){
  if(error&&!ready)return <div className="fatal"><h1>Could not open your local data</h1><p>{error}</p><p>Do not clear browser storage. Your existing data has not been overwritten.</p></div>;
  if(!ready||introSeen===null)return <div className="loading-shell"><span className="brand-symbol"><BookOpenText/></span><h1>Mezgeb መዝገብ</h1><p><Localized text="Opening your ledger…"/></p></div>;
  if(!doc.business.name&&section==="home"&&!introSeen)return <WelcomeIntro onStart={()=>{try{window.localStorage.setItem("mezgeb_intro_seen","1");}catch{}setIntroSeen(true);}}/>;
- if(!doc.business.name&&section!=="settings")return <Onboard/>;
+ if(!doc.business.name&&section!=="account"&&!section.startsWith("settings"))return <Onboard/>;
  const l=(key:CopyKey)=>label(doc.locale,key);
- return <Shell onNew={()=>setNewType("sale")}>
+ return <Shell onNew={()=>setNewType("sale")} onSearchEntry={setEditing} onSearchReceipt={setReceiptView}>
   {section==="home"&&<>
    <Heading eyebrow="YOUR BUSINESS AT A GLANCE" title={tr(doc.locale,words.greeting)} subtitle={doc.business.name+" · "+l("hello")} action={<div className="action-pair"><button className="btn primary" onClick={()=>setNewType("sale")}><Plus size={18}/>{l("sale")}</button><button className="btn subtle" onClick={()=>setNewType("expense")}><ArrowUpRight size={18}/>{l("expense")}</button></div>}/>
    <div className="signature-balance"><div><span>{tr(doc.locale,words.balance)}</span><strong>{money(summary.profit,doc.locale)}</strong><small>{doc.business.name} · {month}</small></div><span className="signature-balance-icon"><Wallet size={32}/></span><button className="btn subtle" onClick={()=>setNewType("sale")}><Plus size={18}/>{l("sale")}</button></div><SignatureTour onNew={()=>setNewType("sale")}/>
@@ -228,7 +233,7 @@ export function Workspace({section}:{section:string}){
   {section==="receipts"&&<Receipts onView={setReceiptView}/>}
   {section==="reports"&&<Reports/>}
   {section==="dube"&&<Dube/>}
-  {section==="settings"&&<Settings/>}
+  {(section==="account"||section.startsWith("settings"))&&<Settings key={section} section={section}/>}
   {section==="plans"&&<Plans/>}
   {newType&&<EntryEditor key={newType+"-new"} type={newType} entry={null} onClose={()=>setNewType(null)}/>}
   {editing&&<EntryEditor key={editing.id} type={editing.type} entry={editing} onClose={()=>setEditing(null)}/>}

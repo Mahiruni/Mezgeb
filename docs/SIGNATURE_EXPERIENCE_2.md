@@ -1,0 +1,3 @@
+# Signature Experience 2.0 — 1.1.0
+
+New three-action header (menu, search, account), official icon geometry, grouped drawer, account profile with authenticated metadata edit, dedicated settings routes, local search, light/dark surfaces, responsive sheets and inputs, overlay focus and Android back handling, localized new navigation labels, serialized ledger persistence with confirmed transaction saves. Existing package and HTTPS origin retained. No new financial schema or production credentials. Existing translations outside the new labels, live device sessions, certified receipts, payment integration and presenter media remain outside this revision. Validate API 35/36 upgrade, cold startup and actual on-device interaction before publication.

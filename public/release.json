@@ -1,20 +1,19 @@
 {
-  "version": "1.0.4",
-  "name": "Signature Edition",
+  "version": "1.1.0",
+  "name": "Signature Experience 2.0",
   "type": "interface",
   "notes": {
     "en": [
-      "Seven guided onboarding stories and instant language selection",
-      "Centered account creation and a new balance overview",
-      "New docked navigation and optional dashboard tour"
+      "Three-icon Signature header and grouped navigation",
+      "Dedicated account and settings screens",
+      "Universal local search and polished transaction sheets",
+      "Confirmed local saves and preserved offline ledger"
     ],
     "am": [
-      "ሰባት የመግቢያ ገጾች እና የቋንቋ ምርጫ",
-      "አዲስ የመለያ እና የሂሳብ ገጽ"
+      "የተሻሻለ ምናሌ እና ቅንብሮች"
     ],
     "om": [
-      "Seensa fuula torbaa fi filannoo afaanii",
-      "Fuula herregaa fi cuunfaa maallaqaa haaraa"
+      "Baafataa fi qindaa'ina fooyya'e"
     ]
   }
 }

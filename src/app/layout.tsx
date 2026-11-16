@@ -3,6 +3,7 @@ import "@fontsource-variable/plus-jakarta-sans";
 import "@fontsource-variable/noto-sans-ethiopic";
 import "./globals.css";
 import "./safe-areas.css";
+import "./signature-v2.css";
 import { LedgerProvider } from "./providers";
 import { ServiceWorker } from "@/components/service-worker";
 import { SyncProvider } from "./sync-provider";

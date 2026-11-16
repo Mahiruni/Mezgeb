@@ -13,7 +13,7 @@ export function AccountForm({ enabled }:{ enabled: boolean }) {
   const query = useSearchParams();
   const {doc,update}=useLedger();
   const t=(p:Parameters<typeof tr>[1])=>tr(doc.locale,p);
-  const [mode,setMode] = useState<Mode>(query.get("mode")==="signup"?"signup":"signin");
+  const [mode,setMode] = useState<Mode>(query.get("mode")==="signup"?"signup":query.get("mode")==="reset"?"reset":"signin");
   const [name,setName]=useState("");
   const [agreed,setAgreed]=useState(false);
   const [privacyOpen,setPrivacyOpen]=useState(false);
@@ -32,7 +32,7 @@ export function AccountForm({ enabled }:{ enabled: boolean }) {
     try{
       const client=createClient();
       if(mode==="signin"){
-        const {data,error:authError}=await client.auth.signInWithPassword({email:email.trim().toLowerCase().toLowerCase(),password});
+        const {data,error:authError}=await client.auth.signInWithPassword({email:email.trim().toLowerCase(),password});
         if(authError)throw authError;
         // A session is not proof of email confirmation if the Auth project
         // is misconfigured; don't allow the UI to imply a verified identity.
