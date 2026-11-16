@@ -50,13 +50,13 @@ export function AccountForm({ enabled }:{ enabled: boolean }) {
           return;
         }
         setPassword("");
-        setMessage("If this address can be registered, open the verification link sent to your inbox. Use the same browser to complete the link, then sign in.");
+        setMessage("If this address can be registered, open the verification email on the Android device with Mezgeb installed. Its button opens Mezgeb to finish setup.");
       }else{
         const {error:authError}=await client.auth.resetPasswordForEmail(email.trim(),{
           redirectTo:window.location.origin+"/auth/callback?next=/auth/update-password"
         });
         if(authError)throw authError;
-        setMessage("If this address has an account, follow the recovery email on the same device and browser where you requested it.");
+        setMessage("If this address has an account, open the recovery email on your Android device with Mezgeb installed. The link opens inside the app.");
       }
     }catch(e){
       setError(e instanceof Error?e.message:"Authentication is temporarily unavailable.");
