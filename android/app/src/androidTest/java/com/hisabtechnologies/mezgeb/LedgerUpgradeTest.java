@@ -67,10 +67,39 @@ public class LedgerUpgradeTest {
     @Test public void verifyOfflineUpgrade()throws Exception{
         try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)){
             ready(scenario);
-            waitFor(scenario,"String(navigator.onLine)","false");
+            // A WebView can claim it is online even while emulator egress is blocked.
+            // Probe a non-bundled, cache-bypassing URL and require a network rejection.
+            js(scenario,"(function(){window.__ciNetwork='pending';fetch('/api/cloud?ciOfflineProbe='+Date.now(),{cache:'no-store',credentials:'omit'}).then(function(){window.__ciNetwork='reachable'},function(){window.__ciNetwork='blocked'});return true})()");
+            waitFor(scenario,"window.__ciNetwork","blocked");
             readFixture(scenario);
             waitFor(scenario,"String(document.body.innerText.includes('CI Upgrade Ledger'))","true");
             assertTrue("Expected 1.0.4 bundled route",String.valueOf(js(scenario,"location.pathname")).startsWith("/__mezgeb_native__/1.0.4/"));
+        }
+    }
+
+    private void readWrittenFixture(ActivityScenario<MainActivity> scenario)throws Exception{
+        for(int attempt=0;attempt<30;attempt++){
+        js(scenario,"(function(){window.__ciWritten='pending';var r=indexedDB.open('mezgeb_local_v2');r.onerror=function(){window.__ciWritten='open-error'};r.onsuccess=function(){var db=r.result;var tx=db.transaction('documents','readonly');var g=tx.objectStore('documents').get('main');g.onsuccess=function(){var d=g.result&&g.result.value;var a=d&&d.entries.find(function(e){return e.id==='ci-sale'}),b=d&&d.entries.find(function(e){return e.id==='ci-expense'}),c=d&&d.entries.find(function(e){return e.note==='CI offline expense'});window.__ciWritten=!!(d&&d.business.name==='CI Upgrade Ledger'&&d.entries.length===3&&a&&a.cents===12345&&a.receipt.number==='CI-0001'&&b&&b.cents===2345&&c&&c.type==='expense'&&c.cents===777&&d.nextDraft===2&&d.customers.length===1&&d.customers[0].events[0].cents===5000&&d.customers[0].events[1].cents===1000)?'retained':'not-yet'};tx.oncomplete=function(){db.close()}};return true})()");
+        for(int i=0;i<20;i++){Object result=js(scenario,"window.__ciWritten");if("retained".equals(result))return;if(!"pending".equals(result))break;Thread.sleep(100);}
+        Thread.sleep(250);
+        }
+        fail("Offline entry and prior records were not durably retained");
+    }
+    @Test public void recordOfflineExpense()throws Exception{
+        try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)){
+            ready(scenario);readFixture(scenario);
+            js(scenario,"(function(){document.querySelector('.action-pair button.btn.subtle').click();return true})()");
+            waitFor(scenario,"String(!!document.querySelector('[aria-label=\\\"Amount in ETB\\\"]'))","true");
+            js(scenario,"(function(){var a=document.querySelector('[aria-label=\\\"Amount in ETB\\\"]'),n=document.querySelector('[role=dialog] textarea');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(a,'7.77');a.dispatchEvent(new Event('input',{bubbles:true}));Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(n,'CI offline expense');n.dispatchEvent(new Event('input',{bubbles:true}));return true})()");
+            js(scenario,"(function(){document.querySelector('[role=dialog] form button[type=submit]').click();return true})()");
+            waitFor(scenario,"String(document.body.innerText.includes('CI offline expense'))","true");
+            readWrittenFixture(scenario);
+        }
+    }
+    @Test public void verifyOfflineExpenseRetained()throws Exception{
+        try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)){
+            ready(scenario);readWrittenFixture(scenario);
+            waitFor(scenario,"String(document.body.innerText.includes('CI offline expense'))","true");
         }
     }
 }
