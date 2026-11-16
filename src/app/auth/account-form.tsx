@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { ArrowLeft, BookOpenText, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 import {useLedger} from "@/app/providers";
+import {localize} from "@/components/localized";
 import {tr,words} from "@/lib/signature-copy";
 import { createClient } from "@/lib/supabase/client";
 
@@ -69,7 +70,7 @@ export function AccountForm({ enabled }:{ enabled: boolean }) {
         setMessage("If this address has an account, follow the recovery email on the same device and browser where you requested it.");
       }
     }catch(e){
-      setError(e instanceof Error?e.message:"Authentication is temporarily unavailable.");
+      const code=(e as {code?:string})?.code;const message=e instanceof Error?e.message:"Authentication is temporarily unavailable.";setError(localize(doc.locale,code==="invalid_credentials"?"Incorrect email or password. Check your details and try again.":code==="email_not_confirmed"?"Confirm your email before signing in.":/fetch|network|timeout/i.test(message)?"Could not connect. Check your internet and try again.":message));
     }finally{setBusy(false);}
   };
   const resend = async()=>{
@@ -105,7 +106,7 @@ export function AccountForm({ enabled }:{ enabled: boolean }) {
         {mode==="signup"&&privacyOpen&&<div className="notice" role="region" aria-label={t(words.privacy)}><p>{t(["Your ledger stays on this device. Account access uses your email and optional verified cloud pairing. Keep backups and protect your device. Draft receipts are not official tax documents. This is a preview notice, not final commercial terms.","መዝገብዎ በዚህ መሣሪያ ይቀመጣል። መለያ ለመክፈት ኢሜይል ይጠቀሙ። ምትኬ ያስቀምጡ። ረቂቅ ደረሰኝ ኦፊሴላዊ የግብር ሰነድ አይደለም።","Galmeen keessan meeshaa kana irratti kuufama. Herregaaf imeelii fayyadamaa; kuusaa qabaadhaa. Nagaheen wixinee sanada gibiraa seera qabeessa miti."])}</p></div>}
         {error&&<p className="form-error" role="alert">{error}</p>}
         {message&&<p className="notice" role="status">{message}</p>}
-        <button className="btn primary full" disabled={!enabled||busy} type="submit">{busy?t(words.wait):mode==="signin"?t(words.signin):mode==="signup"?t(words.start):"Email recovery link"}</button>
+        <button className="btn primary full" disabled={!enabled||busy} type="submit">{busy?t(words.wait):mode==="signin"?t(words.signin):mode==="signup"?t(words.start) :localize(doc.locale,"Email recovery link")}</button>
       </form>
       {mode!=="reset"&&<button className="btn subtle full" type="button" disabled={!enabled||busy||!email.trim()} onClick={()=>void resend()}>{t(["Resend verification email","የማረጋገጫ ኢሜይል እንደገና ላክ","Imeelii mirkaneessaa irra deebi’ii ergi"])}</button>}
       <div className="auth-switch">
