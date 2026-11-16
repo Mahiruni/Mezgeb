@@ -36,7 +36,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git worktree add --detach "$RUNNER_TEMP/mezgeb-baseline" fa71ba307423b9bf43659563cf31dea4c64763b0
+          git worktree add --detach "$RUNNER_TEMP/mezgeb-baseline" 864e1f1e8e15369ac157dec86fba4ca46a4372e5
           gradle --no-daemon --project-dir "$RUNNER_TEMP/mezgeb-baseline/android" :app:assembleDebug
           cp "$RUNNER_TEMP/mezgeb-baseline/android/app/build/outputs/apk/debug/app-debug.apk" "$RUNNER_TEMP/mezgeb-baseline.apk"
           gradle --no-daemon --project-dir android :app:assembleDebug :app:assembleDebugAndroidTest

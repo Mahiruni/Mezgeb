@@ -47,6 +47,7 @@ firewall6=1
 adb shell iptables -C OUTPUT ! -o lo -j REJECT
 adb shell ip6tables -C OUTPUT ! -o lo -j REJECT
 run_test verifyOfflineUpgrade
+run_test verifySignatureExperience
 run_test verifyPreviousOrUpgradedLedger
 run_test recordOfflineExpense
 run_test verifyOfflineExpenseRetained

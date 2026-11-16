@@ -102,4 +102,33 @@ public class LedgerUpgradeTest {
             waitFor(scenario,"String(document.body.innerText.includes('CI offline expense'))","true");
         }
     }
+
+    @Test public void verifySignatureExperience()throws Exception{
+        try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)){
+            ready(scenario);readFixture(scenario);
+            waitFor(scenario,"String(document.querySelectorAll('[data-testid=signature-header] button').length)","3");
+            js(scenario,"document.querySelector('[data-testid=signature-header] button').click()");
+            waitFor(scenario,"String(!!document.querySelector('.signature-drawer'))","true");
+            waitFor(scenario,"String(document.querySelector('.signature-drawer').innerText.includes('Data & backup')&&document.querySelector('.signature-drawer').innerText.includes('My account'))","true");
+            js(scenario,"window.dispatchEvent(new Event('mezgeb-back',{cancelable:true}))");
+            waitFor(scenario,"String(!!document.querySelector('.signature-drawer'))","false");
+            js(scenario,"document.querySelectorAll('[data-testid=signature-header] button')[1].click()");
+            waitFor(scenario,"String(!!document.querySelector('.search-sheet'))","true");
+            js(scenario,"(function(){var a=document.querySelector('.premium-search input');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(a,'CI sale marker');a.dispatchEvent(new Event('input',{bubbles:true}));return true})()");
+            waitFor(scenario,"String(document.querySelector('.search-results').innerText.includes('CI sale marker'))","true");
+            js(scenario,"window.dispatchEvent(new Event('mezgeb-back',{cancelable:true}))");
+            waitFor(scenario,"String(!!document.querySelector('.search-sheet'))","false");
+            js(scenario,"document.querySelectorAll('[data-testid=signature-header] button')[2].click()");
+            waitFor(scenario,"String(!!document.querySelector('.account-hero'))","true");
+            js(scenario,"document.querySelector('a[href$=\\\"/settings\\\"]').click()");
+            waitFor(scenario,"String(!!document.querySelector('.signature-settings-index'))","true");
+            js(scenario,"document.querySelector('a[href$=\\\"/settings-appearance\\\"]').click()");
+            waitFor(scenario,"String(!!document.querySelector('.theme-preview.dark'))","true");
+            js(scenario,"document.querySelector('.theme-preview.dark').closest('button').click()");
+            waitFor(scenario,"document.documentElement.dataset.theme","dark");
+            js(scenario,"document.querySelector('.theme-preview.light').closest('button').click()");
+            waitFor(scenario,"document.documentElement.dataset.theme","light");
+            readFixture(scenario);
+        }
+    }
 }
