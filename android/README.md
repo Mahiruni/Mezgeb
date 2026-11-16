@@ -14,6 +14,10 @@ Install `android/app/build/outputs/apk/debug/app-debug.apk` on a test Android de
 
 Android 11+ uses WindowInsets for the status bar (clock, signal, notifications and camera cutouts), bottom gesture/navigation area, landscape sides, and keyboard. Android 8-10 use the platform's default non-fullscreen layout. The website also uses viewport safe-area CSS for standalone PWAs and iPhones. Keep this contract across future changes: do not draw interactive content beneath system controls.
 
+## Email deep links
+
+The Android manifest registers `com.hisabtechnologies.mezgeb://auth/callback` for Supabase email actions and `com.hisabtechnologies.mezgeb://open/...` for in-app destinations. Email action tokens are handed to the existing HTTPS callback inside the app's WebView; email actions stay in Mezgeb and one-time tokens are cleared from WebView history. An updated Android build must be installed for the URI handler to take effect. This repository has no iOS target.
+
 ## Release gates before real customers
 
 - Confirm offline reopening, persisted IndexedDB, account email confirmation, signed-in sync, conflict recovery, and native back/navigation on two physical phones.
