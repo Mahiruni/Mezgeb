@@ -1,0 +1,13 @@
+Reset your Mezgeb password
+
+Choose a new password
+
+We received a request to reset your password. Follow the secure link to choose a new one. Your password changes only after you complete the reset.
+
+Reset password: {{ .ConfirmationURL }}
+
+If you did not request this action, you can ignore this message.
+
+Mezgeb by Hisab Technologies
+Automated account message. Please do not reply.
+Privacy: https://mezgeb-omega.vercel.app/privacy

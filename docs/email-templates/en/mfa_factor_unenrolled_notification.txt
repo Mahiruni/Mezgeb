@@ -1,0 +1,14 @@
+A Mezgeb verification method was removed
+
+A verification method has been removed
+
+A verification method was removed from your Mezgeb account.
+Method: {{ .FactorType }}
+
+Review security settings: https://mezgeb-omega.vercel.app/settings-security
+
+If you made this change, no action is needed. If not, review your account and reset your password if you still have access.
+
+Mezgeb by Hisab Technologies
+Automated account message. Please do not reply.
+Privacy: https://mezgeb-omega.vercel.app/privacy

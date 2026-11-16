@@ -1,0 +1,16 @@
+name: Mezgeb communication templates
+on:
+  pull_request:
+    paths: ['docs/email-templates/**','docs/sms-templates/**','scripts/mezgeb-communications.mjs','public/mezgeb-email-logo.png','.github/workflows/communications-check.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/mezgeb-communications.mjs

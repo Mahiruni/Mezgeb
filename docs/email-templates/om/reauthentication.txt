@@ -1,0 +1,13 @@
+Koodii mirkaneessaa Mezgeb
+
+Eenyummaa keessan mirkaneessaa
+
+Hojii herregaa of eeggannoo barbaadu dura koodii yeroo kana galchaa.
+
+Koodii mirkaneessaa: {{ .Token }}
+
+Koodii kana namaaf hin kenninaa. Gargaarsi Mezgeb koodii kana isin hin gaafatu.
+
+Mezgeb — Hisab Technologies
+Ergaa herregaa ofumaan ergamu. Maaloo deebii hin ergin.
+Iccitii: https://mezgeb-omega.vercel.app/privacy

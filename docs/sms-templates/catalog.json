@@ -1,0 +1,192 @@
+[
+  {
+    "id": "verify_phone",
+    "category": "auth",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: Your verification code is {code}. Do not share it.",
+      "am": "መዝገብ፦ የማረጋገጫ ኮድዎ {code} ነው። አያጋሩ።",
+      "om": "Mezgeb: Koodiin mirkaneessaa keessan {code} dha. Hin qoodinaa."
+    }
+  },
+  {
+    "id": "sign_in",
+    "category": "auth",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: Your sign-in code is {code}. Do not share it.",
+      "am": "መዝገብ፦ የመግቢያ ኮድዎ {code} ነው። አያጋሩ።",
+      "om": "Mezgeb: Koodiin seensaa {code} dha. Hin qoodinaa."
+    }
+  },
+  {
+    "id": "phone_change",
+    "category": "auth",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: Your phone change code is {code}. Do not share it.",
+      "am": "መዝገብ፦ ስልክ መቀየሪያ ኮድዎ {code} ነው። አያጋሩ።",
+      "om": "Mezgeb: Koodiin bilbila jijjiiruu {code} dha. Hin qoodinaa."
+    }
+  },
+  {
+    "id": "mfa_challenge",
+    "category": "auth",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: Your security code is {code}. Never share this code.",
+      "am": "መዝገብ፦ የደህንነት ኮድዎ {code} ነው። አያጋሩ።",
+      "om": "Mezgeb: Koodiin nageenyaa {code} dha. Hin qoodinaa."
+    }
+  },
+  {
+    "id": "reauthentication",
+    "category": "auth",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: Confirm your identity with code {code}. Never share it.",
+      "am": "መዝገብ፦ በኮድ {code} ማንነትዎን ያረጋግጡ። አያጋሩ።",
+      "om": "Mezgeb: Koodii {code} fayyadamuun eenyummaa mirkaneessaa. Hin qoodinaa."
+    }
+  },
+  {
+    "id": "account_confirmed",
+    "category": "security",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: Your account is confirmed. Open Mezgeb to get started.",
+      "am": "መዝገብ፦ መለያዎ ተረጋግጧል። መዝገብን ይክፈቱ።",
+      "om": "Mezgeb: Herregni keessan mirkanaa'eera. Mezgeb banaa."
+    }
+  },
+  {
+    "id": "password_reset_requested",
+    "category": "security",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: A password reset was requested. Check your email. If not you, ignore the request.",
+      "am": "መዝገብ፦ የይለፍ ቃል መቀየሪያ ጥያቄ ቀርቧል። ኢሜይልዎን ይመልከቱ።",
+      "om": "Mezgeb: Jecha iccitii haaromsuuf gaaffiin dhiyaateera. Imeelii keessan ilaalaa."
+    }
+  },
+  {
+    "id": "password_changed",
+    "category": "security",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: Your password changed. If this wasn't you, open Mezgeb and review account security.",
+      "am": "መዝገብ፦ የይለፍ ቃልዎ ተቀይሯል። እርስዎ ካልሆኑ መለያዎን ይገምግሙ።",
+      "om": "Mezgeb: Jechi iccitii jijjiirameera. Isin yoo hin taane nageenya herregaa ilaalaa."
+    }
+  },
+  {
+    "id": "email_changed",
+    "category": "security",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: Your account email changed. If this wasn't you, review account security.",
+      "am": "መዝገብ፦ ኢሜይልዎ ተቀይሯል። እርስዎ ካልሆኑ መለያዎን ይገምግሙ።",
+      "om": "Mezgeb: Imeeliin jijjiirameera. Isin yoo hin taane nageenya herregaa ilaalaa."
+    }
+  },
+  {
+    "id": "phone_changed",
+    "category": "security",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: Your account phone changed. If this wasn't you, review account security.",
+      "am": "መዝገብ፦ ስልክ ቁጥርዎ ተቀይሯል። እርስዎ ካልሆኑ መለያዎን ይገምግሙ።",
+      "om": "Mezgeb: Bilbilli herregaa jijjiirameera. Isin yoo hin taane nageenya herregaa ilaalaa."
+    }
+  },
+  {
+    "id": "identity_linked",
+    "category": "security",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: A sign-in method was added. If unexpected, review account security.",
+      "am": "መዝገብ፦ የመግቢያ ዘዴ ተጨምሯል። ካላወቁ መለያዎን ይገምግሙ።",
+      "om": "Mezgeb: Malli seensaa dabalameera. Yoo hin eegne nageenya herregaa ilaalaa."
+    }
+  },
+  {
+    "id": "identity_unlinked",
+    "category": "security",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: A sign-in method was removed. If unexpected, review account security.",
+      "am": "መዝገብ፦ የመግቢያ ዘዴ ተወግዷል። ካላወቁ መለያዎን ይገምግሙ።",
+      "om": "Mezgeb: Malli seensaa haqameera. Yoo hin eegne nageenya herregaa ilaalaa."
+    }
+  },
+  {
+    "id": "mfa_added",
+    "category": "security",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: A verification method was added. If unexpected, review account security.",
+      "am": "መዝገብ፦ የማረጋገጫ ዘዴ ተጨምሯል። ካላወቁ መለያዎን ይገምግሙ።",
+      "om": "Mezgeb: Malli mirkaneessaa dabalameera. Yoo hin eegne nageenya herregaa ilaalaa."
+    }
+  },
+  {
+    "id": "mfa_removed",
+    "category": "security",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: A verification method was removed. If unexpected, review account security.",
+      "am": "መዝገብ፦ የማረጋገጫ ዘዴ ተወግዷል። ካላወቁ መለያዎን ይገምግሙ።",
+      "om": "Mezgeb: Malli mirkaneessaa haqameera. Yoo hin eegne nageenya herregaa ilaalaa."
+    }
+  },
+  {
+    "id": "new_sign_in",
+    "category": "security",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: A new sign-in was detected. If unexpected, review account security.",
+      "am": "መዝገብ፦ አዲስ መግቢያ ተመዝግቧል። ካላወቁ መለያዎን ይገምግሙ።",
+      "om": "Mezgeb: Seensi haaraan galmaa'eera. Yoo hin eegne nageenya herregaa ilaalaa."
+    }
+  },
+  {
+    "id": "backup_reminder",
+    "category": "optional",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: Time to back up your business records. Open Settings > Data & backup.",
+      "am": "መዝገብ፦ መዝገቦችዎን ምትኬ ያስቀምጡ። ቅንብሮችን ይክፈቱ።",
+      "om": "Mezgeb: Galmee keessan kuusaa. Qindaa'ina banaa."
+    }
+  },
+  {
+    "id": "sync_attention",
+    "category": "optional",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: Your records need a sync review. Open Mezgeb Settings to check.",
+      "am": "መዝገብ፦ መዝገቦችዎ የማመሳሰል ግምገማ ይፈልጋሉ። ቅንብሮችን ይክፈቱ።",
+      "om": "Mezgeb: Galmeen keessan gamaaggama wal-simsiisaa barbaada. Qindaa'ina banaa."
+    }
+  },
+  {
+    "id": "business_reminder",
+    "category": "optional",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: You have a business reminder. Open Mezgeb to review it.",
+      "am": "መዝገብ፦ የንግድ ማስታወሻ አለዎት። መዝገብን ይክፈቱ።",
+      "om": "Mezgeb: Yaadachiisa daldalaa qabdu. Mezgeb banaa."
+    }
+  },
+  {
+    "id": "app_update",
+    "category": "optional",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: An update is available. Open Settings > App updates to check.",
+      "am": "መዝገብ፦ አዲስ ዝመና አለ። ቅንብሮች ውስጥ ዝመናዎችን ይፈልጉ።",
+      "om": "Mezgeb: Haaromsi jira. Qindaa'ina appii keessatti ilaalaa."
+    }
+  }
+]

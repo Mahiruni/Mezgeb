@@ -1,0 +1,13 @@
+Confirm your Mezgeb account
+
+Your account is almost ready
+
+Confirm your email address to finish setting up your Mezgeb account.
+
+Confirm email address: {{ .ConfirmationURL }}
+
+If you did not request this action, you can ignore this message.
+
+Mezgeb by Hisab Technologies
+Automated account message. Please do not reply.
+Privacy: https://mezgeb-omega.vercel.app/privacy

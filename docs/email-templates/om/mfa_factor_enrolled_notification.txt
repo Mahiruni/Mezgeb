@@ -1,0 +1,14 @@
+Nageenyi herrega Mezgeb haaromfameera
+
+Malli mirkaneessaa dabalameera
+
+Malli mirkaneessaa haaraan herrega Mezgeb irratti dabalameera.
+Mala: {{ .FactorType }}
+
+Qindaa'ina nageenyaa ilaalaa: https://mezgeb-omega.vercel.app/settings-security
+
+Jijjiirama kana isin gootan taanaan tarkaanfiin hin barbaachisu. Yoo hin goone herrega keessan ilaalaa; yoo seenuu dandeessan jecha iccitii haaromsaa.
+
+Mezgeb — Hisab Technologies
+Ergaa herregaa ofumaan ergamu. Maaloo deebii hin ergin.
+Iccitii: https://mezgeb-omega.vercel.app/privacy

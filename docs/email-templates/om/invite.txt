@@ -1,0 +1,13 @@
+Gara Mezgeb affeeramtaniittu
+
+Baga gara Mezgeb dhuftan
+
+Herrega Mezgeb uumuuf affeerraa kana fudhadhaa.
+
+Affeerraa fudhadhaa: {{ .ConfirmationURL }}
+
+Gaaffii kana isin hin dhiyeessine taanaan ergaa kana dhiisaa.
+
+Mezgeb — Hisab Technologies
+Ergaa herregaa ofumaan ergamu. Maaloo deebii hin ergin.
+Iccitii: https://mezgeb-omega.vercel.app/privacy

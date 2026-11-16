@@ -1,0 +1,14 @@
+A new sign-in method was added to Mezgeb
+
+A sign-in method has been connected
+
+A new authentication provider was linked to your Mezgeb account.
+Method: {{ .Provider }}
+
+Review account security: https://mezgeb-omega.vercel.app/settings-security
+
+If you made this change, no action is needed. If not, review your account and reset your password if you still have access.
+
+Mezgeb by Hisab Technologies
+Automated account message. Please do not reply.
+Privacy: https://mezgeb-omega.vercel.app/privacy
