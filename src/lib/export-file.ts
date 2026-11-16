@@ -5,7 +5,7 @@ type Bridge={postMessage:(s:string)=>void;onmessage:((e:{data:string})=>void)|nu
 declare global {interface Window {MezgebExport?:Bridge}}
 export async function exportFile(name:string,content:string,mime:string):Promise<ExportResult>{
  const normalized=mime.split(";")[0];
- if(!/^mezgeb-[A-Za-z0-9._-]{1,100}\\.(json|csv)$/.test(name)||!["application/json","text/csv"].includes(normalized))throw Error("Unsupported export format.");
+ if(!/^mezgeb-[A-Za-z0-9._-]{1,100}\.(json|csv)$/.test(name)||!["application/json","text/csv"].includes(normalized))throw Error("Unsupported export format.");
  const bytes=new TextEncoder().encode(content);
  if(bytes.length===0||bytes.length>25_000_000)throw Error("Export exceeds the 25 MB limit.");
  const bridge=window.MezgebExport;
