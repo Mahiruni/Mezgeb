@@ -122,6 +122,11 @@ public class LedgerUpgradeTest {
             waitFor(scenario,"String(!!document.querySelector('.account-hero'))","true");
             js(scenario,"document.querySelector('a[href$=\\\"/settings\\\"]').click()");
             waitFor(scenario,"String(!!document.querySelector('.signature-settings-index'))","true");
+            waitFor(scenario,"String(document.querySelector('[data-testid=settings-update-card]').innerText.includes('1.1.1'))","true");
+            js(scenario,"document.querySelector('.update-info-toggle').click()");
+            waitFor(scenario,"String(document.querySelector('.installed-notes').innerText.includes('Upgrade controls'))","true");
+            js(scenario,"document.querySelector('[data-testid=check-app-update]').click()");
+            waitFor(scenario,"String(document.querySelector('.update-status')?.innerText.includes('Could not check'))","true");
             js(scenario,"document.querySelector('a[href$=\\\"/settings-appearance\\\"]').click()");
             waitFor(scenario,"String(!!document.querySelector('.theme-preview.dark'))","true");
             js(scenario,"document.querySelector('.theme-preview.dark').closest('button').click()");

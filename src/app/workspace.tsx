@@ -152,7 +152,7 @@ function AppUpdate({compact=false}:{compact?:boolean}){
  const currentNotes=releaseInfo.notes[doc.locale as keyof typeof releaseInfo.notes]||releaseInfo.notes.en;
  async function check(){
   if(lock.current)return;lock.current=true;setBusy(true);setCandidate(null);setStatus("Checking for updates…");
-  try{await flush();const response=await fetch(native?"/native-update.json":"/release.json",{cache:"no-store",credentials:"same-origin",signal:AbortSignal.timeout(15000)});if(!response.ok)throw Error("Unavailable");const next=parseUpdate(await response.json(),native,doc.locale);setCandidate(next);setStatus(next?"Update available":native?"No verified Android update is available.":"You have the latest available interface.");}
+  try{try{await flush();}catch{setStatus("Update paused: local records could not be safely saved. Export a backup first.");return;}const response=await fetch(native?"/native-update.json":"/release.json",{cache:"no-store",credentials:"same-origin",signal:AbortSignal.timeout(15000)});if(!response.ok)throw Error("Unavailable");const next=parseUpdate(await response.json(),native,doc.locale);setCandidate(next);setStatus(next?"Update available":native?"No verified Android update is available.":"You have the latest available interface.");}
   catch{setStatus("Could not check for updates. Check your connection and try again.");}
   finally{lock.current=false;setBusy(false);}
  }
