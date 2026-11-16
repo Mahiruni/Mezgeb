@@ -7,7 +7,7 @@ const manifest=JSON.parse(await fs.readFile(dir+'/manifest.json','utf8'));
 const sms=JSON.parse(await fs.readFile('docs/sms-templates/catalog.json','utf8'));
 const locales=['en','am','om'];
 assert.equal(manifest.length,13);assert.equal(new Set(manifest.map(x=>x.key)).size,13);
-assert.equal(sms.length,19);assert.equal(new Set(sms.map(x=>x.id)).size,19);
+assert.equal(sms.length,26);assert.equal(new Set(sms.map(x=>x.id)).size,26);
 const payload={};
 for(const item of manifest){
  const html=await fs.readFile(dir+'/'+item.file,'utf8');
@@ -26,7 +26,9 @@ for(const item of manifest){
  if(item.notificationFlag)payload[item.notificationFlag]=true;
 }
 for(const x of sms){assert.equal(x.enabled,false);for(const lang of locales){const t=x.copy[lang];assert(t&&t.length<=300);assert.equal(t.includes('{code}'),x.category==='auth');assert(!/https?:\/\/|password is|balance:|ETB /i.test(t));}}
-console.log('Validated 13 deployment emails, 39 localized HTML/text pairs and 57 SMS messages. No live sends.');
+console.log('Validated 13 deployment emails, 39 localized HTML/text pairs and 78 SMS messages. No live sends.');
+// Estimate conservative segment counts for source review; providers can vary.
+for(const x of sms)for(const lang of locales){const message=x.copy[lang].replace("{code}","123456");const basic=/^[\x20-\x7e]*$/.test(message)&&!/[\^{}\\\[\]~|]/.test(message);const units=message.length,segments=units<=(basic?160:70)?1:Math.ceil(units/(basic?153:67));assert(segments<=3,"SMS segment review required: "+x.id+"/"+lang);}
 const args=process.argv.slice(2);if(!args.length)process.exit(0);
 assert(args.includes('--reviewed'),'Human review and staging delivery verification required.');
 const token=process.env.SUPABASE_ACCESS_TOKEN;assert(token,'Set the owner access token privately.');

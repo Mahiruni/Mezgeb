@@ -188,5 +188,75 @@
       "am": "መዝገብ፦ አዲስ ዝመና አለ። ቅንብሮች ውስጥ ዝመናዎችን ይፈልጉ።",
       "om": "Mezgeb: Haaromsi jira. Qindaa'ina appii keessatti ilaalaa."
     }
+  },
+  {
+    "id": "invitation_ready",
+    "category": "optional",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: You have an account invitation. Check your email to review it.",
+      "am": "መዝገብ፦ የመለያ ግብዣ አለዎት። ኢሜይልዎን ይመልከቱ።",
+      "om": "Mezgeb: Affeerraa herregaa qabdu. Imeelii keessan ilaalaa."
+    }
+  },
+  {
+    "id": "email_change_requested",
+    "category": "security",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: An email change was requested. Check your email. If unexpected, review account security.",
+      "am": "መዝገብ፦ ኢሜይል ለመቀየር ጥያቄ ቀርቧል። ኢሜይልዎን ይመልከቱ።",
+      "om": "Mezgeb: Imeelii jijjiiruuf gaaffiin dhiyaateera. Imeelii keessan ilaalaa."
+    }
+  },
+  {
+    "id": "receipt_draft_ready",
+    "category": "optional",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: A receipt draft is ready. Open Mezgeb to review it.",
+      "am": "መዝገብ፦ የደረሰኝ ረቂቅ ዝግጁ ነው። መዝገብን ይክፈቱ።",
+      "om": "Mezgeb: Wixineen nagahee qophaa'eera. Mezgeb banaa."
+    }
+  },
+  {
+    "id": "dube_review",
+    "category": "optional",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: You have a Dube review reminder. Open Mezgeb to review your records.",
+      "am": "መዝገብ፦ የዱቤ ግምገማ ማስታወሻ አለዎት። መዝገብን ይክፈቱ።",
+      "om": "Mezgeb: Yaadachiisa liqii qabdu. Mezgeb banaa."
+    }
+  },
+  {
+    "id": "report_ready",
+    "category": "optional",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: Your requested report is ready to review. Open Mezgeb.",
+      "am": "መዝገብ፦ የጠየቁት ሪፖርት ዝግጁ ነው። መዝገብን ይክፈቱ።",
+      "om": "Mezgeb: Gabaasni gaafattan qophaa'eera. Mezgeb banaa."
+    }
+  },
+  {
+    "id": "tax_review",
+    "category": "optional",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: Your tax review reminder is due. Open Mezgeb to review your preferences and records.",
+      "am": "መዝገብ፦ የግብር ግምገማ ማስታወሻ አለዎት። መዝገብን ይክፈቱ።",
+      "om": "Mezgeb: Yaadachiisa gibiraa qabdu. Mezgeb banaa."
+    }
+  },
+  {
+    "id": "billing_update",
+    "category": "optional",
+    "enabled": false,
+    "copy": {
+      "en": "Mezgeb: There is a billing update on your account. Open Mezgeb to review it.",
+      "am": "መዝገብ፦ የክፍያ መረጃ ዝመና አለ። መዝገብን ይክፈቱ።",
+      "om": "Mezgeb: Odeeffannoon kaffaltii haaromfameera. Mezgeb banaa."
+    }
   }
 ]

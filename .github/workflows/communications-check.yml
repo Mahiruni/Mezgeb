@@ -1,7 +1,7 @@
 name: Mezgeb communication templates
 on:
   pull_request:
-    paths: ['docs/email-templates/**','docs/sms-templates/**','scripts/mezgeb-communications.mjs','public/mezgeb-email-logo.png','.github/workflows/communications-check.yml']
+    paths: ['docs/email-templates/**','docs/sms-templates/**','scripts/mezgeb-communications.mjs','scripts/check-email-templates.go','src/app/auth/account-form.tsx','public/mezgeb-email-logo.png','.github/workflows/communications-check.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -14,3 +14,8 @@ jobs:
         with:
           node-version: '22'
       - run: node scripts/mezgeb-communications.mjs
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+      - run: go run scripts/check-email-templates.go

@@ -49,7 +49,7 @@ export function AccountForm({ enabled }:{ enabled: boolean }) {
         if(!name.trim()||!agreed)throw Error("Enter your name and accept the privacy notice.");
         const {data,error:authError}=await client.auth.signUp({
           email:email.trim().toLowerCase(),password,
-          options:{emailRedirectTo:window.location.origin+"/auth/callback",data:{full_name:name.trim()}}
+          options:{emailRedirectTo:window.location.origin+"/auth/callback",data:{full_name:name.trim(),locale:doc.locale==="am"||doc.locale==="om"?doc.locale:"en"}}
         });
         if(authError)throw authError;
         // Supabase returns a session immediately when Confirm Email is off.
