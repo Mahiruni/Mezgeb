@@ -8,8 +8,8 @@ android {
         applicationId 'com.hisabtechnologies.mezgeb'
         minSdk 26
         targetSdk 35
-        versionCode 12
-        versionName '1.1.0'
+        versionCode 13
+        versionName '1.1.1'
         manifestPlaceholders = [mezgebLabel: 'Mezgeb']
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }

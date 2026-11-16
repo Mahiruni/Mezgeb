@@ -2,6 +2,17 @@
 import {useLedger} from "@/app/providers";
 import type {Locale} from "@/lib/mezgeb";
 const dictionary:Record<string,readonly [string,string]>={
+"Installed version":["የተጫነው ስሪት","Vershinii fe'ame"],
+"Available version":["የሚገኘው ስሪት","Vershinii jiru"],
+"Keep Mezgeb up to date without losing your records.":["መዝገቦችዎን ሳያጡ መዝገብን ያዘምኑ።","Galmee keessan osoo hin dhabne Mezgeb haaromsaa."],
+"Checking for updates…":["ዝመና እየፈለገ ነው…","Haaromsa barbaadaa jira…"],
+"Update available":["ዝመና አለ","Haaromsi jira"],
+"No verified Android update is available.":["የተረጋገጠ የአንድሮይድ ዝመና የለም።","Haaromsi Android mirkanaa'e hin jiru."],
+"Could not check for updates. Check your connection and try again.":["ዝመና መፈለግ አልተቻለም። ግንኙነትዎን ይፈትሹና ይሞክሩ።","Haaromsa ilaaluu hin dandeenye. Walqunnamtii keessan ilaalaa irra deebi'aa yaalaa."],
+"Upgrade now":["አሁን አዘምን","Amma haaromsi"],
+"What's new":["አዲስ ምን አለ","Wanti haaraan maali"],
+"Android verifies the update package and signing certificate before installation.":["አንድሮይድ ከመጫን በፊት የዝመና ፓኬጁንና ፊርማውን ያረጋግጣል።","Android fe'uu dura paakeejii haaromsaa fi ragaa mallattoo mirkaneessa."],
+
 "BUILT FOR ETHIOPIAN BUSINESSES":["ለኢትዮጵያ ንግዶች የተሰራ","Daldala Itoophiyaatiif kan qophaa'e"],
 "Every birr.":["እያንዳንዱ ብር።","Birrii hundaa."],
 "Every day.":["በየቀኑ።","Guyyaa hundaa."],

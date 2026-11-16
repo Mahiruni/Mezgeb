@@ -73,7 +73,7 @@ public class LedgerUpgradeTest {
             waitFor(scenario,"window.__ciNetwork","blocked");
             readFixture(scenario);
             waitFor(scenario,"String(document.body.innerText.includes('CI Upgrade Ledger'))","true");
-            assertTrue("Expected 1.1.0 bundled route",String.valueOf(js(scenario,"location.pathname")).startsWith("/__mezgeb_native__/1.1.0/"));
+            assertTrue("Expected 1.1.1 bundled route",String.valueOf(js(scenario,"location.pathname")).startsWith("/__mezgeb_native__/1.1.1/"));
         }
     }
 

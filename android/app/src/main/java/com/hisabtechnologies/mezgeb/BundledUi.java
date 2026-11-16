@@ -10,7 +10,7 @@ import java.util.HashMap;
 /** Read-only signed APK assets, served under the existing HTTPS ledger origin. */
 final class BundledUi {
     static final String HOST="mezgeb-omega.vercel.app";
-    static final String PREFIX="/__mezgeb_native__/1.1.0";
+    static final String PREFIX="/__mezgeb_native__/1.1.1";
     static final String START="https://"+HOST+PREFIX+"/";
     private static final Set<String> PAGES=new java.util.HashSet<>(java.util.Arrays.asList("/","/ledger","/receipts","/reports","/dube","/settings","/plans","/account","/settings-business","/settings-language","/settings-appearance","/settings-tax","/settings-security","/settings-cloud","/settings-backup","/settings-updates","/settings-help","/settings-about","/auth","/auth/status","/auth/update-password","/privacy"));
     static boolean isLocal(Uri u) {return "https".equalsIgnoreCase(u.getScheme())&&HOST.equalsIgnoreCase(u.getHost())&&(u.getPort()==-1||u.getPort()==443)&&u.getPath()!=null&&u.getPath().startsWith(PREFIX+"/");}
