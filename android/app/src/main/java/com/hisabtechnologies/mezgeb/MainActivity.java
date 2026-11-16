@@ -27,6 +27,8 @@ import android.widget.Toast;
 
 public final class MainActivity extends Activity {
     private static final String APP_HOST = "mezgeb-omega.vercel.app";
+    private static final String APP_LINK_SCHEME = "com.hisabtechnologies.mezgeb";
+    private boolean clearEmailLinkHistory;
     private static final String APP_URL = "https://" + APP_HOST + "/";
     private static final int PICK_FILE_REQUEST = 71;
     // Dark Android clock, battery and connectivity indicators over pale slate.
@@ -111,6 +113,13 @@ public final class MainActivity extends Activity {
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 return request.isForMainFrame() && handleNavigation(request.getUrl());
             }
+            @Override public void onPageFinished(WebView view, String url) {
+                if (clearEmailLinkHistory && url != null
+                        && !"/auth/callback".equals(Uri.parse(url).getPath())) {
+                    view.clearHistory(); // Remove one-time email tokens from WebView history.
+                    clearEmailLinkHistory = false;
+                }
+            }
             @Override public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
                 handler.cancel(); // Never bypass TLS errors for financial records.
                 Toast.makeText(MainActivity.this, "Secure connection failed. Try again online.", Toast.LENGTH_LONG).show();
@@ -131,13 +140,63 @@ public final class MainActivity extends Activity {
                 }
             }
         });
+        if (openAppLink(getIntent())) return;
         if (savedInstanceState != null && webView.restoreState(savedInstanceState) != null) {
             return;
         }
         webView.loadUrl(APP_URL);
     }
 
+    @Override protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        openAppLink(intent);
+    }
+
+    private boolean openAppLink(Intent intent) {
+        if (webView == null || intent == null) return false;
+        Uri target = resolveAppLink(intent.getData());
+        if (target == null) return false;
+        clearEmailLinkHistory = true;
+        webView.clearHistory();
+        webView.loadUrl(target.toString());
+        return true;
+    }
+
+    private Uri resolveAppLink(Uri incoming) {
+        if (incoming == null || !APP_LINK_SCHEME.equalsIgnoreCase(incoming.getScheme())) return null;
+        String host = incoming.getHost();
+        String path = incoming.getPath();
+        if ("auth".equalsIgnoreCase(host) && "/callback".equals(path)) {
+            String tokenHash = incoming.getQueryParameter("token_hash");
+            String type = incoming.getQueryParameter("type");
+            if (tokenHash == null || tokenHash.isEmpty() || !isSupportedEmailOtpType(type)) return null;
+            return Uri.parse(APP_URL).buildUpon()
+                .appendPath("auth")
+                .appendPath("callback")
+                .appendQueryParameter("token_hash", tokenHash)
+                .appendQueryParameter("type", type)
+                .build();
+        }
+        if ("open".equalsIgnoreCase(host)) {
+            if ("/".equals(path) || "/home".equals(path)) return Uri.parse(APP_URL);
+            if ("/settings".equals(path)) return Uri.parse(APP_URL + "settings");
+            if ("/auth".equals(path)) return Uri.parse(APP_URL + "auth");
+            if ("/auth/status".equals(path)) return Uri.parse(APP_URL + "auth/status");
+        }
+        return null;
+    }
+
+    private boolean isSupportedEmailOtpType(String type) {
+        return "signup".equals(type) || "email".equals(type) || "recovery".equals(type)
+            || "email_change".equals(type) || "invite".equals(type) || "magiclink".equals(type);
+    }
+
     private boolean handleNavigation(Uri destination) {
+        if (APP_LINK_SCHEME.equalsIgnoreCase(destination.getScheme())) {
+            openAppLink(new Intent(Intent.ACTION_VIEW, destination));
+            return true;
+        }
         if ("https".equalsIgnoreCase(destination.getScheme()) && APP_HOST.equalsIgnoreCase(destination.getHost())) {
             return false;
         }
