@@ -9,7 +9,9 @@ Create a dedicated Supabase project named Mezgeb. Do not reuse the Hisab Technol
 ## 2. Auth URL configuration
 
 Site URL: https://mezgeb-omega.vercel.app
-Additional redirect: https://mezgeb-omega.vercel.app/auth/callback
+Additional redirects:
+- https://mezgeb-omega.vercel.app/auth/callback
+- com.hisabtechnologies.mezgeb://auth/callback
 
 Add explicit authorized preview URLs individually for test deployments. Avoid permissive wildcard production redirects. Vercel currently reports SSO protection for this project's vercel.app domains.
 
@@ -23,10 +25,12 @@ Preview public configuration was created for Mezgeb and is separate from Product
 ## 4. Authentication pages
 
 /auth — sign up, sign in, and request recovery.
-/auth/callback — server-side PKCE code exchange.
+/auth/callback — server-side token-hash verification for app email links and PKCE code exchange.
 /auth/update-password — complete password recovery.
 
-Use Supabase Auth email/password settings, SMTP, confirmation templates, and callback allowlist. Test sign-up, email delivery, sign-in persistence, sign-out, reset, and expired links.
+Confirmation, invitation, magic-link, email-change, and recovery email actions use the Android URI `com.hisabtechnologies.mezgeb://auth/callback` with Supabase's `token_hash` and `type`. Android routes the one-time token to the existing HTTPS callback inside the Mezgeb WebView, then clears the callback from WebView history. The app must be installed to open these links.
+
+Use Supabase Auth email/password settings, SMTP, confirmation templates, and callback allowlist. Test sign-up, email delivery, sign-in persistence, sign-out, reset, and expired links on the installed Android app.
 
 ## 5. Database remains pending
 
