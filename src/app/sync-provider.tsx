@@ -374,7 +374,8 @@ export function SyncProvider({children}:{children:React.ReactNode}){
   setStatus("not-linked");setMessage("Automatic synchronization disabled. Local financial records remain on this device.");
  };
  const signOut=async()=>{
-  await createClient().auth.signOut();
+  const {error}=await createClient().auth.signOut();
+  if(error)throw error;
   setAccountId(null);setIsVerified(false);setEmail(null);
   setStatus("signed-out");setMessage("Signed out. Sync paused; local records remain.");
  };

@@ -41,6 +41,8 @@ public final class MainActivity extends Activity {
     // Dark Android clock, battery and connectivity indicators over pale violet.
     private static final int STATUS_BAR_BACKGROUND = Color.rgb(224, 229, 251);
     private WebView webView;
+    private View statusBand;
+    private boolean darkTheme;
     private static final String TAG="MezgebStartup";
     private boolean onlineRecovery;
     private boolean recovering;
@@ -74,6 +76,7 @@ public final class MainActivity extends Activity {
         // On Android 15+, statusBarColor can be transparent under enforced
         // edge-to-edge. Paint the actual inset behind the OS indicators.
         View statusBarBackdrop = new View(this);
+        statusBand=statusBarBackdrop;
         statusBarBackdrop.setBackgroundColor(STATUS_BAR_BACKGROUND);
         viewport.addView(statusBarBackdrop, new FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, 0, Gravity.TOP));
@@ -142,6 +145,14 @@ public final class MainActivity extends Activity {
             ledgerExport = null;
             Log.w(TAG,"Optional backup bridge unavailable",unavailable);
         }
+        try {
+            if(androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.WEB_MESSAGE_LISTENER))
+                androidx.webkit.WebViewCompat.addWebMessageListener(webView,"MezgebTheme",java.util.Collections.singleton("https://"+APP_HOST),(view,message,origin,mainFrame,reply)->{
+                    if(!mainFrame||!"https".equals(origin.getScheme())||!APP_HOST.equals(origin.getHost())||(origin.getPort()!=-1&&origin.getPort()!=443))return;
+                    String value=message.getData();if(!"light".equals(value)&&!"dark".equals(value))return;
+                    darkTheme="dark".equals(value);applySystemBarAppearance();
+                });
+        }catch(RuntimeException | LinkageError unavailable){Log.w(TAG,"Theme bridge unavailable",unavailable);}
         webView.setWebViewClient(new WebViewClient() {
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 return BundledUi.response(MainActivity.this,request.getUrl(),request.getMethod());
@@ -212,15 +223,18 @@ public final class MainActivity extends Activity {
         // Appearance is cosmetic. A missing or not-yet-attached controller must never abort launch.
         try {
             View decor = getWindow().getDecorView();
+            int band=darkTheme?Color.rgb(16,17,37):STATUS_BAR_BACKGROUND;
+            if(statusBand!=null)statusBand.setBackgroundColor(band);
+            getWindow().setStatusBarColor(band);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 WindowInsetsController controller = decor.getWindowInsetsController();
                 if (controller != null) {
                     controller.setSystemBarsAppearance(
-                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                        darkTheme?0:WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
                         WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
                 }
             } else {
-                decor.setSystemUiVisibility(decor.getSystemUiVisibility() | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                int flags=decor.getSystemUiVisibility();decor.setSystemUiVisibility(darkTheme?flags&~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR:flags|View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
             }
         } catch (RuntimeException | LinkageError unavailable) {
             Log.w(TAG,"System bar appearance deferred",unavailable);

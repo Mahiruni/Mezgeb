@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import {MezgebBrand} from "@/components/mezgeb-brand";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { ArrowLeft, BookOpenText, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
@@ -86,7 +87,7 @@ export function AccountForm({ enabled }:{ enabled: boolean }) {
   };
   return <main className="auth-shell signature-auth">
     <aside className="auth-visual" aria-hidden="true"><div className="auth-visual-mark">መ</div><div className="auth-visual-copy"><span className="eyebrow light">YOUR BUSINESS, BEAUTIFULLY ORGANIZED</span><h2>Clarity for every birr.</h2><p>Sales, expenses, Dube, and receipts in one considered workspace.</p><div className="auth-visual-foot"><ShieldCheck size={17}/> Offline-first. Secure by design.</div></div></aside>
-    <div className="auth-brand"><span className="brand-symbol"><BookOpenText size={24}/></span><span>Mezgeb <small>መዝገብ</small></span><select className="auth-language" aria-label={t(words.language)} value={doc.locale==="am"||doc.locale==="om"?doc.locale:"en"} onChange={e=>update(d=>({...d,locale:e.target.value as "en"|"am"|"om"}))}><option value="en">English</option><option value="am">አማርኛ</option><option value="om">Afaan Oromoo</option></select></div>
+    <div className="auth-brand"><MezgebBrand/><select className="auth-language" aria-label={t(words.language)} value={doc.locale==="am"||doc.locale==="om"?doc.locale:"en"} onChange={e=>update(d=>({...d,locale:e.target.value as "en"|"am"|"om"}))}><option value="en">English</option><option value="am">አማርኛ</option><option value="om">Afaan Oromoo</option></select></div>
     <section className="auth-panel">
       <Link className="auth-back" href="/"><ArrowLeft size={17}/> {t(words.back)}</Link>
       <div className="auth-icon"><LockKeyhole size={24}/></div>

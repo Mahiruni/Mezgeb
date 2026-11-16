@@ -2,6 +2,22 @@
 import {useLedger} from "@/app/providers";
 import type {Locale} from "@/lib/mezgeb";
 const dictionary:Record<string,readonly [string,string]>={
+"Product sale":["የምርት ሽያጭ","Gurgurtaa oomishaa"],
+"Service":["አገልግሎት","Tajaajila"],
+"Other income":["ሌላ ገቢ","Galii biraa"],
+"Stock purchase":["የዕቃ ግዢ","Bittaa meeshaa"],
+"Utilities":["የመገልገያ ወጪዎች","Baasii tajaajilaa"],
+"Rent":["ኪራይ","Kiraa"],
+"Transport":["ትራንስፖርት","Geejjiba"],
+"Salary":["ደመወዝ","Mindaa"],
+"Other expense":["ሌላ ወጪ","Baasii biraa"],
+"Cash":["ጥሬ ገንዘብ","Maallaqa callaa"],
+"Other Bank":["ሌላ ባንክ","Baankii biraa"],
+"What was this for?":["ለምን ነበር?","Maaliif ture?"],
+"VAT registered":["ቫት ተመዝግቧል","VAT galmaa'e"],
+"Enable estimated VAT reporting":["የቫት ግምታዊ ሪፖርት አንቃ","Gabaasa tilmaama VAT bani"],
+"Not an official tax document":["ኦፊሴላዊ የግብር ሰነድ አይደለም","Sanada gibiraa seera qabeessa miti"],
+
 "Overview":["አጠቃላይ","Cuunfaa"],
 "My account":["መለያዬ","Herrega koo"],
 "Account & business":["መለያ እና ንግድ","Herregaa fi daldala"],
