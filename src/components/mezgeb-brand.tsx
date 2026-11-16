@@ -1,0 +1,2 @@
+"use client";
+export function MezgebBrand({small=false}:{small?:boolean}){return <span className={"signature-brand"+(small?" compact":"")}><svg viewBox="0 0 108 108" aria-hidden="true"><path fill="#4925F5" d="M26 10H82Q94 10 94 22V86Q94 98 82 98H26Q14 98 14 86V22Q14 10 26 10Z"/><path fill="#fff" d="M38 27H70Q74 27 74 31V80Q74 84 70 84H38Q34 84 34 80V31Q34 27 38 27Z"/><path fill="#4925F5" d="M43 39H66V44H43ZM43 52H66V57H43ZM43 65H58V70H43Z"/></svg><span><b>Mezgeb</b><small>መዝገብ</small></span></span>;}

@@ -1,0 +1,223 @@
+[
+  {
+    "key": "confirmation",
+    "kind": "link",
+    "subject": "{{ if eq (printf \"%v\" .Data.locale) \"am\" }}የመዝገብ መለያዎን ያረጋግጡ{{ else if eq (printf \"%v\" .Data.locale) \"om\" }}Herrega Mezgeb keessan mirkaneessaa{{ else }}Confirm your Mezgeb account{{ end }}",
+    "subjects": {
+      "en": "Confirm your Mezgeb account",
+      "am": "የመዝገብ መለያዎን ያረጋግጡ",
+      "om": "Herrega Mezgeb keessan mirkaneessaa"
+    },
+    "preheaders": {
+      "en": "Your account is almost ready",
+      "am": "መለያዎ ሊዘጋጅ ነው",
+      "om": "Herregni keessan qophaa'aa jira"
+    },
+    "file": "confirmation.html",
+    "notificationFlag": null
+  },
+  {
+    "key": "invite",
+    "kind": "link",
+    "subject": "{{ if eq (printf \"%v\" .Data.locale) \"am\" }}ወደ መዝገብ ተጋብዘዋል{{ else if eq (printf \"%v\" .Data.locale) \"om\" }}Gara Mezgeb affeeramtaniittu{{ else }}You're invited to Mezgeb{{ end }}",
+    "subjects": {
+      "en": "You're invited to Mezgeb",
+      "am": "ወደ መዝገብ ተጋብዘዋል",
+      "om": "Gara Mezgeb affeeramtaniittu"
+    },
+    "preheaders": {
+      "en": "You're invited to Mezgeb",
+      "am": "ወደ መዝገብ እንኳን ደህና መጡ",
+      "om": "Baga gara Mezgeb dhuftan"
+    },
+    "file": "invite.html",
+    "notificationFlag": null
+  },
+  {
+    "key": "magic_link",
+    "kind": "link",
+    "subject": "{{ if eq (printf \"%v\" .Data.locale) \"am\" }}የመዝገብ መግቢያ አገናኝ{{ else if eq (printf \"%v\" .Data.locale) \"om\" }}Geessituu seensaa Mezgeb{{ else }}Your secure Mezgeb sign-in link{{ end }}",
+    "subjects": {
+      "en": "Your secure Mezgeb sign-in link",
+      "am": "የመዝገብ መግቢያ አገናኝ",
+      "om": "Geessituu seensaa Mezgeb"
+    },
+    "preheaders": {
+      "en": "Sign in to Mezgeb",
+      "am": "ወደ መዝገብ ይግቡ",
+      "om": "Gara Mezgeb seenaa"
+    },
+    "file": "magic_link.html",
+    "notificationFlag": null
+  },
+  {
+    "key": "email_change",
+    "kind": "link",
+    "subject": "{{ if eq (printf \"%v\" .Data.locale) \"am\" }}አዲሱን ኢሜይልዎን ያረጋግጡ{{ else if eq (printf \"%v\" .Data.locale) \"om\" }}Imeelii haaraa mirkaneessaa{{ else }}Confirm your new email address{{ end }}",
+    "subjects": {
+      "en": "Confirm your new email address",
+      "am": "አዲሱን ኢሜይልዎን ያረጋግጡ",
+      "om": "Imeelii haaraa mirkaneessaa"
+    },
+    "preheaders": {
+      "en": "Confirm your email change",
+      "am": "የኢሜይል ለውጥን ያረጋግጡ",
+      "om": "Jijjiirama imeelii mirkaneessaa"
+    },
+    "file": "email_change.html",
+    "notificationFlag": null
+  },
+  {
+    "key": "recovery",
+    "kind": "link",
+    "subject": "{{ if eq (printf \"%v\" .Data.locale) \"am\" }}የመዝገብ የይለፍ ቃል ይቀይሩ{{ else if eq (printf \"%v\" .Data.locale) \"om\" }}Jecha iccitii Mezgeb haaromsaa{{ else }}Reset your Mezgeb password{{ end }}",
+    "subjects": {
+      "en": "Reset your Mezgeb password",
+      "am": "የመዝገብ የይለፍ ቃል ይቀይሩ",
+      "om": "Jecha iccitii Mezgeb haaromsaa"
+    },
+    "preheaders": {
+      "en": "Choose a new password",
+      "am": "አዲስ የይለፍ ቃል ይምረጡ",
+      "om": "Jecha iccitii haaraa filadhaa"
+    },
+    "file": "recovery.html",
+    "notificationFlag": null
+  },
+  {
+    "key": "reauthentication",
+    "kind": "code",
+    "subject": "{{ if eq (printf \"%v\" .Data.locale) \"am\" }}የመዝገብ ማረጋገጫ ኮድዎ{{ else if eq (printf \"%v\" .Data.locale) \"om\" }}Koodii mirkaneessaa Mezgeb{{ else }}Your Mezgeb verification code{{ end }}",
+    "subjects": {
+      "en": "Your Mezgeb verification code",
+      "am": "የመዝገብ ማረጋገጫ ኮድዎ",
+      "om": "Koodii mirkaneessaa Mezgeb"
+    },
+    "preheaders": {
+      "en": "Verify that it's you",
+      "am": "ማንነትዎን ያረጋግጡ",
+      "om": "Eenyummaa keessan mirkaneessaa"
+    },
+    "file": "reauthentication.html",
+    "notificationFlag": null
+  },
+  {
+    "key": "password_changed_notification",
+    "kind": "security",
+    "subject": "Your Mezgeb password was changed",
+    "subjects": {
+      "en": "Your Mezgeb password was changed",
+      "am": "የመዝገብ የይለፍ ቃልዎ ተቀይሯል",
+      "om": "Jechi iccitii Mezgeb jijjiirameera"
+    },
+    "preheaders": {
+      "en": "Your password has been updated",
+      "am": "የይለፍ ቃልዎ ተዘምኗል",
+      "om": "Jechi iccitii keessan haaromfameera"
+    },
+    "file": "password_changed_notification.html",
+    "notificationFlag": "mailer_notifications_password_changed_enabled"
+  },
+  {
+    "key": "email_changed_notification",
+    "kind": "security",
+    "subject": "Your Mezgeb email address was changed",
+    "subjects": {
+      "en": "Your Mezgeb email address was changed",
+      "am": "የመዝገብ ኢሜይልዎ ተቀይሯል",
+      "om": "Imeeliin Mezgeb jijjiirameera"
+    },
+    "preheaders": {
+      "en": "Your account email has changed",
+      "am": "የመለያዎ ኢሜይል ተቀይሯል",
+      "om": "Imeeliin herregaa jijjiirameera"
+    },
+    "file": "email_changed_notification.html",
+    "notificationFlag": "mailer_notifications_email_changed_enabled"
+  },
+  {
+    "key": "phone_changed_notification",
+    "kind": "security",
+    "subject": "Your Mezgeb phone number was changed",
+    "subjects": {
+      "en": "Your Mezgeb phone number was changed",
+      "am": "የመዝገብ ስልክ ቁጥርዎ ተቀይሯል",
+      "om": "Lakkoofsi bilbilaa Mezgeb jijjiirameera"
+    },
+    "preheaders": {
+      "en": "Your phone number has changed",
+      "am": "ስልክ ቁጥርዎ ተዘምኗል",
+      "om": "Lakkoofsi bilbilaa haaromfameera"
+    },
+    "file": "phone_changed_notification.html",
+    "notificationFlag": "mailer_notifications_phone_changed_enabled"
+  },
+  {
+    "key": "identity_linked_notification",
+    "kind": "security",
+    "subject": "A new sign-in method was added to Mezgeb",
+    "subjects": {
+      "en": "A new sign-in method was added to Mezgeb",
+      "am": "አዲስ የመግቢያ ዘዴ ተጨምሯል",
+      "om": "Malli seensaa haaraan dabalameera"
+    },
+    "preheaders": {
+      "en": "A sign-in method has been connected",
+      "am": "የመግቢያ ዘዴ ተገናኝቷል",
+      "om": "Malli seensaa walqabateera"
+    },
+    "file": "identity_linked_notification.html",
+    "notificationFlag": "mailer_notifications_identity_linked_enabled"
+  },
+  {
+    "key": "identity_unlinked_notification",
+    "kind": "security",
+    "subject": "A Mezgeb sign-in method was removed",
+    "subjects": {
+      "en": "A Mezgeb sign-in method was removed",
+      "am": "የመዝገብ መግቢያ ዘዴ ተወግዷል",
+      "om": "Malli seensaa Mezgeb haqameera"
+    },
+    "preheaders": {
+      "en": "A sign-in method has been removed",
+      "am": "የመግቢያ ዘዴ ተወግዷል",
+      "om": "Malli seensaa haqameera"
+    },
+    "file": "identity_unlinked_notification.html",
+    "notificationFlag": "mailer_notifications_identity_unlinked_enabled"
+  },
+  {
+    "key": "mfa_factor_enrolled_notification",
+    "kind": "security",
+    "subject": "Your Mezgeb account security was updated",
+    "subjects": {
+      "en": "Your Mezgeb account security was updated",
+      "am": "የመዝገብ መለያ ደህንነት ተዘምኗል",
+      "om": "Nageenyi herrega Mezgeb haaromfameera"
+    },
+    "preheaders": {
+      "en": "A verification method has been added",
+      "am": "የማረጋገጫ ዘዴ ተጨምሯል",
+      "om": "Malli mirkaneessaa dabalameera"
+    },
+    "file": "mfa_factor_enrolled_notification.html",
+    "notificationFlag": "mailer_notifications_mfa_factor_enrolled_enabled"
+  },
+  {
+    "key": "mfa_factor_unenrolled_notification",
+    "kind": "security",
+    "subject": "A Mezgeb verification method was removed",
+    "subjects": {
+      "en": "A Mezgeb verification method was removed",
+      "am": "የመዝገብ ማረጋገጫ ዘዴ ተወግዷል",
+      "om": "Malli mirkaneessaa Mezgeb haqameera"
+    },
+    "preheaders": {
+      "en": "A verification method has been removed",
+      "am": "የማረጋገጫ ዘዴ ተወግዷል",
+      "om": "Malli mirkaneessaa haqameera"
+    },
+    "file": "mfa_factor_unenrolled_notification.html",
+    "notificationFlag": "mailer_notifications_mfa_factor_unenrolled_enabled"
+  }
+]

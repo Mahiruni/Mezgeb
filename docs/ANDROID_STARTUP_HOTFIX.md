@@ -1,0 +1,8 @@
+# 1.0.2 startup recovery hotfix
+
+User reported immediate crash on opening 1.0.1. Exact device exception not yet available. Guard optional AndroidX backup and service worker initialization, discard stale WebView navigation state (not storage), handle main-frame and renderer failures, show native recovery and explicit same-origin online fallback, add React error boundary and storage error state, and require a ready title in an API 35 emulator cold-start/restart smoke test. No database/schema/signing changes. Production signing remains unavailable. Real-device validation required.
+
+The optional Recovery Test variant is deliberately a separate Android package (`com.hisabtechnologies.mezgeb.recovery`) with its own empty storage, distinct label, and production APK updates disabled. It is for launch testing without deleting an existing signed installation. It does not copy or restore data automatically; do not enter real financial records or connect cloud accounts while testing. The regular build retains the original package and origin. Neither build fixes signing continuity on its own.
+
+## 1.0.3 root-cause correction
+API 35 emulator run 43772954381 reproduced the startup error: `PhoneWindow.getInsetsController` dereferenced a null DecorView in MainActivity.initialize before setContentView. Initialize decor explicitly before window configuration; obtain the controller from the decor only after setContentView, retry on window focus, and treat system-bar appearance as nonfatal. Keep launch and renderer recovery safeguards. Version code 10. Must pass fresh cold-start and restart on emulator before claiming runtime validation.

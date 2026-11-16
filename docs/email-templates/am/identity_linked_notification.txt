@@ -1,0 +1,14 @@
+አዲስ የመግቢያ ዘዴ ተጨምሯል
+
+የመግቢያ ዘዴ ተገናኝቷል
+
+ከመዝገብ መለያዎ ጋር አዲስ የመግቢያ ዘዴ ተገናኝቷል።
+ዘዴ: {{ .Provider }}
+
+የመለያ ደህንነትን ይገምግሙ: https://mezgeb-omega.vercel.app/settings-security
+
+ለውጡን እርስዎ ካደረጉ ተጨማሪ እርምጃ አያስፈልግም። ካልሆነ መለያዎን ይገምግሙ፤ መግባት ከቻሉ የይለፍ ቃልዎን ይቀይሩ።
+
+መዝገብ — Hisab Technologies
+ራስ-ሰር የመለያ መልእክት። እባክዎ መልስ አይላኩ።
+ግላዊነት: https://mezgeb-omega.vercel.app/privacy

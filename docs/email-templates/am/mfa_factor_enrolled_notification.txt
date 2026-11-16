@@ -1,0 +1,14 @@
+የመዝገብ መለያ ደህንነት ተዘምኗል
+
+የማረጋገጫ ዘዴ ተጨምሯል
+
+በመዝገብ መለያዎ አዲስ የማረጋገጫ ዘዴ ተጨምሯል።
+ዘዴ: {{ .FactorType }}
+
+የደህንነት ቅንብሮችን ይገምግሙ: https://mezgeb-omega.vercel.app/settings-security
+
+ለውጡን እርስዎ ካደረጉ ተጨማሪ እርምጃ አያስፈልግም። ካልሆነ መለያዎን ይገምግሙ፤ መግባት ከቻሉ የይለፍ ቃልዎን ይቀይሩ።
+
+መዝገብ — Hisab Technologies
+ራስ-ሰር የመለያ መልእክት። እባክዎ መልስ አይላኩ።
+ግላዊነት: https://mezgeb-omega.vercel.app/privacy

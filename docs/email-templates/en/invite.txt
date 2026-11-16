@@ -1,0 +1,13 @@
+You're invited to Mezgeb
+
+You're invited to Mezgeb
+
+Accept this invitation to create your Mezgeb account and get started.
+
+Accept invitation: {{ .ConfirmationURL }}
+
+If you did not request this action, you can ignore this message.
+
+Mezgeb by Hisab Technologies
+Automated account message. Please do not reply.
+Privacy: https://mezgeb-omega.vercel.app/privacy

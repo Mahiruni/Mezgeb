@@ -1,0 +1,13 @@
+Jecha iccitii Mezgeb haaromsaa
+
+Jecha iccitii haaraa filadhaa
+
+Jecha iccitii haaromsuuf gaaffiin dhiyaateera. Geessituu kanaan jecha haaraa filadhaa. Hanga adeemsa xumurtanitti hin jijjiiramu.
+
+Jecha iccitii haaromsaa: {{ .ConfirmationURL }}
+
+Gaaffii kana isin hin dhiyeessine taanaan ergaa kana dhiisaa.
+
+Mezgeb — Hisab Technologies
+Ergaa herregaa ofumaan ergamu. Maaloo deebii hin ergin.
+Iccitii: https://mezgeb-omega.vercel.app/privacy

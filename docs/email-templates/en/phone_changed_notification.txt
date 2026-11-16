@@ -1,0 +1,13 @@
+Your Mezgeb phone number was changed
+
+Your phone number has changed
+
+The phone number associated with your Mezgeb account has been updated.
+
+Review account security: https://mezgeb-omega.vercel.app/settings-security
+
+If you made this change, no action is needed. If not, review your account and reset your password if you still have access.
+
+Mezgeb by Hisab Technologies
+Automated account message. Please do not reply.
+Privacy: https://mezgeb-omega.vercel.app/privacy

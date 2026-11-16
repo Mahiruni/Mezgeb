@@ -1,0 +1,13 @@
+Your Mezgeb email address was changed
+
+Your account email has changed
+
+The email address associated with your Mezgeb account has changed.
+
+Review account security: https://mezgeb-omega.vercel.app/settings-security
+
+If you made this change, no action is needed. If not, review your account and reset your password if you still have access.
+
+Mezgeb by Hisab Technologies
+Automated account message. Please do not reply.
+Privacy: https://mezgeb-omega.vercel.app/privacy

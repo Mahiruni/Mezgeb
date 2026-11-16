@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function NativeUpdatePage(){return <main className="auth-shell signature-auth"><section className="auth-panel"><h1>Android package updates</h1><p>Native package updates are available through the Mezgeb Android app when a verified, compatible APK is published. The browser interface updates separately.</p><p>Never uninstall your current app to force an update. Your local ledger may be stored on this device.</p><Link className="btn primary full" href="/settings">Back to settings</Link></section></main>}

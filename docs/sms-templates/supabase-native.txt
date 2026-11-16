@@ -1,0 +1,1 @@
+Mezgeb: Your verification code is {{ .Code }}. Never share it.

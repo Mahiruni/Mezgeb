@@ -1,0 +1,13 @@
+Geessituu seensaa Mezgeb
+
+Gara Mezgeb seenaa
+
+Gaaffiin seensaa dhiyaateera. Geessituu yeroo murtaa'e qabu fayyadamaa; nama biraaf hin kenninaa.
+
+Nageenyaan seenaa: {{ .ConfirmationURL }}
+
+Gaaffii kana isin hin dhiyeessine taanaan ergaa kana dhiisaa.
+
+Mezgeb — Hisab Technologies
+Ergaa herregaa ofumaan ergamu. Maaloo deebii hin ergin.
+Iccitii: https://mezgeb-omega.vercel.app/privacy

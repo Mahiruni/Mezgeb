@@ -1,5 +1,5 @@
 /* Mezgeb local-first app shell cache. No financial documents are stored in CacheStorage. */
-const CACHE="mezgeb-shell-v1";
+const CACHE="mezgeb-shell-v3-signature";
 const PAGES=["/","/ledger","/receipts","/reports","/dube","/settings","/plans"];
 self.addEventListener("install",event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(PAGES)).then(()=>self.skipWaiting()));

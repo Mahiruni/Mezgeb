@@ -1,0 +1,13 @@
+Your secure Mezgeb sign-in link
+
+Sign in to Mezgeb
+
+A secure sign-in was requested. Use the link below to continue. It is temporary and must not be shared.
+
+Sign in securely: {{ .ConfirmationURL }}
+
+If you did not request this action, you can ignore this message.
+
+Mezgeb by Hisab Technologies
+Automated account message. Please do not reply.
+Privacy: https://mezgeb-omega.vercel.app/privacy

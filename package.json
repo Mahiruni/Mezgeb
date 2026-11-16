@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build:android-ui": "node scripts/build-android-ui.mjs"
   },
   "dependencies": {
     "next": "^15.5.0",
@@ -18,7 +19,9 @@
     "dexie": "^4.2.0",
     "zod": "^4.0.0",
     "@supabase/ssr": "0.12.7",
-    "@supabase/supabase-js": "2.117.3"
+    "@supabase/supabase-js": "2.117.3",
+    "@fontsource-variable/plus-jakarta-sans": "5.3.0",
+    "@fontsource-variable/noto-sans-ethiopic": "5.3.0"
   },
   "devDependencies": {
     "typescript": "^5.9.2",
@@ -26,6 +29,7 @@
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "vitest": "^3.2.0",
-    "fake-indexeddb": "^6.2.0"
+    "fake-indexeddb": "^6.2.0",
+    "esbuild": "0.25.12"
   }
 }

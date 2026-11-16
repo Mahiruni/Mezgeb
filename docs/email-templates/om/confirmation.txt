@@ -1,0 +1,13 @@
+Herrega Mezgeb keessan mirkaneessaa
+
+Herregni keessan qophaa'aa jira
+
+Herrega Mezgeb keessan xumuruuf imeelii keessan mirkaneessaa.
+
+Imeelii mirkaneessaa: {{ .ConfirmationURL }}
+
+Gaaffii kana isin hin dhiyeessine taanaan ergaa kana dhiisaa.
+
+Mezgeb — Hisab Technologies
+Ergaa herregaa ofumaan ergamu. Maaloo deebii hin ergin.
+Iccitii: https://mezgeb-omega.vercel.app/privacy

@@ -1,0 +1,13 @@
+Your Mezgeb verification code
+
+Verify that it's you
+
+Enter the temporary code below to confirm your identity before a sensitive account action.
+
+Verification code: {{ .Token }}
+
+Never share this code. Mezgeb support will never ask for it.
+
+Mezgeb by Hisab Technologies
+Automated account message. Please do not reply.
+Privacy: https://mezgeb-omega.vercel.app/privacy

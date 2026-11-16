@@ -137,18 +137,18 @@
  * Status-bar contrast contract for standalone PWAs and Android wrappers.
  * The native WebView keeps system bars outside its content; the standalone PWA
  * paints its CSS safe-area only where the browser exposes a nonzero inset.
- * A pale slate system band pairs with dark Android icons; never rely on white
+ * A pale violet system band pairs with dark Android icons; never rely on white
  * icons over a white or translucent page background.
  */
 :root {
-  --mezgeb-status-bar-bg: #dae3ec;
-  --mezgeb-header-bg: #e8eef4;
-  --mezgeb-header-border: #d1dce6;
+  --mezgeb-status-bar-bg: #e0e5fb;
+  --mezgeb-header-bg: #eef1ff;
+  --mezgeb-header-border: #cfd5ee;
 }
 :root[data-theme="dark"] {
-  --mezgeb-status-bar-bg: #132b3f;
-  --mezgeb-header-bg: #192f43;
-  --mezgeb-header-border: #2b4357;
+  --mezgeb-status-bar-bg: #191a32;
+  --mezgeb-header-bg: #20213c;
+  --mezgeb-header-border: #33344d;
 }
 html { background-color: var(--mezgeb-status-bar-bg); }
 body::before {

@@ -1,0 +1,25 @@
+{
+  "version": "1.1.1",
+  "name": "Signature Experience 2.0",
+  "type": "interface",
+  "notes": {
+    "en": [
+      "Compact header sits directly under the phone status bar, without duplicate safe-area spacing.",
+      "Upgrade controls directly in Settings, with the installed version and release information.",
+      "Check for updates without leaving Mezgeb; native updates still require a matching signing certificate.",
+      "The three-icon header, premium navigation and existing financial records are preserved."
+    ],
+    "am": [
+      "የላይኛው ምናሌ ያለ ተጨማሪ ክፍተት ከስልኩ ሁኔታ አሞሌ በታች ይቀመጣል።",
+      "የተጫነው ስሪትና የዝመና መረጃ በቅንብሮች ውስጥ።",
+      "ከመዝገብ ሳይወጡ ዝመና ይፈልጉ።",
+      "የንግድ መዝገቦችዎ ይጠበቃሉ።"
+    ],
+    "om": [
+      "Baafanni gubbaa qaawwa dabalataa malee sarara haala bilbilaa jala taa'a.",
+      "Lakkoofsa appii fi odeeffannoo haaromsaa qindaa'ina keessatti.",
+      "Mezgeb keessaa osoo hin ba'in haaromsa ilaalaa.",
+      "Galmeen daldalaa keessan ni eegama."
+    ]
+  }
+}

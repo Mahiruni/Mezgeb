@@ -1,0 +1,14 @@
+A Mezgeb sign-in method was removed
+
+A sign-in method has been removed
+
+An authentication provider was disconnected from your Mezgeb account.
+Method: {{ .Provider }}
+
+Review account security: https://mezgeb-omega.vercel.app/settings-security
+
+If you made this change, no action is needed. If not, review your account and reset your password if you still have access.
+
+Mezgeb by Hisab Technologies
+Automated account message. Please do not reply.
+Privacy: https://mezgeb-omega.vercel.app/privacy

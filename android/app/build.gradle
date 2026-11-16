@@ -8,11 +8,51 @@ android {
         applicationId 'com.hisabtechnologies.mezgeb'
         minSdk 26
         targetSdk 35
-        versionCode 3
-        versionName '0.2.2-preview'
+        versionCode 13
+        versionName '1.1.1'
+        manifestPlaceholders = [mezgebLabel: 'Mezgeb']
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+    buildTypes {
+        recovery {
+            initWith debug
+            applicationIdSuffix '.recovery'
+            versionNameSuffix '-recovery'
+            manifestPlaceholders = [mezgebLabel: 'Mezgeb Recovery Test']
+            matchingFallbacks = ['debug']
+        }
+        release {
+            debuggable false
+            minifyEnabled false
+        }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+}
+
+def uiRoot = rootProject.projectDir.parentFile
+def uiOutput = file("$buildDir/generated/mezgebUi/assets")
+tasks.register("bundleMezgebUi", Exec) {
+    workingDir uiRoot
+    commandLine "npm", "run", "build:android-ui"
+    inputs.dir(new File(uiRoot,"src"))
+    inputs.file(new File(uiRoot,"scripts/build-android-ui.mjs"))
+    inputs.file(new File(uiRoot,"package.json"))
+    outputs.dir(uiOutput)
+}
+tasks.register("installMezgebUiDependencies", Exec) {
+    workingDir uiRoot
+    commandLine "npm", "install", "--no-audit", "--no-fund"
+}
+tasks.named("bundleMezgebUi").configure { dependsOn("installMezgebUiDependencies") }
+android.sourceSets.main.assets.srcDir(uiOutput)
+tasks.named("preBuild").configure { dependsOn("bundleMezgebUi") }
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test:core:1.6.1'
 }
