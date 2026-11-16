@@ -25,6 +25,8 @@ class StartupBoundary extends Component<{children:ReactNode},{failed:boolean}> {
  componentDidCatch(){document.title="Mezgeb Recovery";}
  render(){return this.state.failed?<StartupRecovery/>:this.props.children;}
 }
+// Android already fits the WebView to actual system bars, cutouts and IME.
+document.documentElement.dataset.mezgebNative="true";
 installNativeLinks();
 const root=document.getElementById("root");
 if(root)createRoot(root).render(<StartupBoundary><LedgerProvider><SyncProvider><NativeApp/></SyncProvider></LedgerProvider></StartupBoundary>);

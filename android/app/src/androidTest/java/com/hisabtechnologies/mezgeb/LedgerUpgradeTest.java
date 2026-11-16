@@ -107,6 +107,19 @@ public class LedgerUpgradeTest {
         try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)){
             ready(scenario);readFixture(scenario);
             waitFor(scenario,"String(document.querySelectorAll('[data-testid=signature-header] button').length)","3");
+            waitFor(scenario,"String(document.documentElement.dataset.mezgebNative)","true");
+            waitFor(scenario,"String(Math.abs(document.querySelector('[data-testid=signature-header]').getBoundingClientRect().top)<1)","true");
+            waitFor(scenario,"String(document.querySelector('[data-testid=signature-header]').getBoundingClientRect().height<=56&&document.querySelector('[data-testid=signature-header] button').getBoundingClientRect().height>=44)","true");
+            scenario.onActivity(a->{
+                if(android.os.Build.VERSION.SDK_INT>=30){
+                    WebView web=find(a.getWindow().getDecorView());
+                    android.view.WindowInsets wi=a.getWindow().getDecorView().getRootWindowInsets();
+                    assertNotNull(web);assertNotNull(wi);
+                    int safeTop=wi.getInsets(android.view.WindowInsets.Type.systemBars()|android.view.WindowInsets.Type.displayCutout()).top;
+                    int[] view=new int[2],decor=new int[2];web.getLocationOnScreen(view);a.getWindow().getDecorView().getLocationOnScreen(decor);
+                    assertTrue("WebView must start exactly at system safe top",Math.abs(view[1]-decor[1]-safeTop)<=1);
+                }
+            });
             js(scenario,"document.querySelector('[data-testid=signature-header] button').click()");
             waitFor(scenario,"String(!!document.querySelector('.signature-drawer'))","true");
             waitFor(scenario,"String(document.querySelector('.signature-drawer').innerText.includes('Data & backup')&&document.querySelector('.signature-drawer').innerText.includes('My account'))","true");

@@ -38,8 +38,8 @@ public final class MainActivity extends Activity {
     private static final String APP_HOST = "mezgeb-omega.vercel.app";
     private static final String APP_URL = BundledUi.START;
     private static final int PICK_FILE_REQUEST = 71;
-    // Dark Android clock, battery and connectivity indicators over pale violet.
-    private static final int STATUS_BAR_BACKGROUND = Color.rgb(224, 229, 251);
+    // Match the signature header surface so the status bar meets it seamlessly.
+    private static final int STATUS_BAR_BACKGROUND = Color.WHITE;
     private WebView webView;
     private View statusBand;
     private boolean darkTheme;
@@ -223,7 +223,7 @@ public final class MainActivity extends Activity {
         // Appearance is cosmetic. A missing or not-yet-attached controller must never abort launch.
         try {
             View decor = getWindow().getDecorView();
-            int band=darkTheme?Color.rgb(16,17,37):STATUS_BAR_BACKGROUND;
+            int band=darkTheme?Color.rgb(25,26,50):STATUS_BAR_BACKGROUND;
             if(statusBand!=null)statusBand.setBackgroundColor(band);
             getWindow().setStatusBarColor(band);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
