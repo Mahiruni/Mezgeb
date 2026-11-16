@@ -20,8 +20,8 @@ function moveMonth(value:string,delta:number){const [y,m]=value.split("-").map(N
 function Blank({title="No records yet",subtitle="When you add records, they will show up here.",Icon=BookOpenText}:{title?:string;subtitle?:string;Icon?:typeof BookOpenText}){
  return <div className="blank"><span className="blank-icon"><Icon size={25}/></span><b>{title}</b><p>{subtitle}</p></div>;
 }
-function Heading({eyebrow,title,subtitle,action}:{eyebrow:string;title:string;subtitle:string;action?:React.ReactNode}){
- return <div className="heading"><div><span className="eyebrow">{eyebrow}</span><h1>{title}</h1><p>{subtitle}</p></div>{action&&<div className="heading-action">{action}</div>}</div>;
+function Heading({eyebrow,title,subtitle,action}:{eyebrow?:string;title:string;subtitle:string;action?:React.ReactNode}){
+ return <div className="heading"><div>{eyebrow&&<span className="eyebrow">{eyebrow}</span>}<h1>{title}</h1><p>{subtitle}</p></div>{action&&<div className="heading-action">{action}</div>}</div>;
 }
 function Tile({title,value,Icon,kind="neutral",note}:{title:string;value:string;Icon:typeof Wallet;kind?:"neutral"|"positive"|"negative";note?:string}){
  return <div className={"tile "+kind}><div className="tile-top"><span>{title}</span><span className="tile-icon"><Icon size={19}/></span></div><strong className="numeric">{value}</strong>{note&&<small>{note}</small>}</div>;
@@ -186,7 +186,9 @@ export function Workspace({section}:{section:string}){
  const l=(key:CopyKey)=>label(doc.locale,key);
  return <Shell onNew={()=>setNewType("sale")}>
   {section==="home"&&<>
-   <Heading eyebrow="YOUR BUSINESS AT A GLANCE" title={"Good to see you."} subtitle={doc.business.name+" · "+l("hello")} action={<div className="action-pair"><button className="btn primary" onClick={()=>setNewType("sale")}><Plus size={18}/>{l("sale")}</button><button className="btn subtle" onClick={()=>setNewType("expense")}><ArrowUpRight size={18}/>{l("expense")}</button></div>}/>
+   <div className="home-hero-dock">
+    <Heading title={"Good to see you."} subtitle={doc.business.name+" · "+l("hello")} action={<div className="action-pair"><button className="btn primary" onClick={()=>setNewType("sale")}><Plus size={18}/>{l("sale")}</button><button className="btn subtle" onClick={()=>setNewType("expense")}><ArrowUpRight size={18}/>{l("expense")}</button></div>}/>
+   </div>
    <div className="welcome-band"><span className="welcome-spark">✦</span><div><strong>Every transaction tells your business story.</strong><p>Stay organized today. Make better decisions tomorrow.</p></div><span className="band-doodle">መዝገብ</span></div>
    <MonthNav month={month} onChange={setMonth}/>
    <div className="stats four"><Tile title={l("sales")} value={money(summary.sales,doc.locale)} Icon={ArrowDownLeft} kind="positive" note={summary.count+" total transactions"}/><Tile title={l("expenses")} value={money(summary.expenses,doc.locale)} Icon={ArrowUpRight} kind="negative"/><Tile title={l("balance")} value={money(summary.profit,doc.locale)} Icon={Wallet}/><Tile title={l("outstanding")} value={money(outstanding(doc.customers),doc.locale)} Icon={Users}/></div>
